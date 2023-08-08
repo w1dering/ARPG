@@ -1,0 +1,47 @@
+[gd_scene load_steps=5 format=3 uid="uid://s5s2r57irkoy"]
+
+[ext_resource type="Script" path="res://player/player.gd" id="1_dqrc4"]
+[ext_resource type="Texture2D" uid="uid://udmyug0tshqj" path="res://player/sprites/kazuha_final.png" id="2_6apvk"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ag20e"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_6apvk")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8w7qm"]
+size = Vector2(53.2558, 49.1803)
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_dqrc4")
+speed = 500
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -1)
+scale = Vector2(0.253999, 0.253999)
+sprite_frames = SubResource("SpriteFrames_ag20e")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+position = Vector2(-4.25, -1.90735e-06)
+scale = Vector2(2.15, 3.05)
+shape = SubResource("RectangleShape2D_8w7qm")
+
+[node name="DashingTimer" type="Timer" parent="."]
+wait_time = 0.25
+one_shot = true
+
+[node name="DashingCDTimer" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+
+[node name="ParryTimer" type="Timer" parent="."]
+wait_time = 0.25
+one_shot = true
+
+[connection signal="timeout" from="DashingTimer" to="." method="_on_dashing_timer_timeout"]
+[connection signal="timeout" from="DashingCDTimer" to="." method="_on_dashing_cd_timer_timeout"]

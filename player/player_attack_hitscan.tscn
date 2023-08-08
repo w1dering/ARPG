@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://cffvdsa007nrm"]
+
+[ext_resource type="Texture2D" uid="uid://colr7fmi3p3bn" path="res://player/sprites/player_slash.png" id="1_ckn2b"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_odhqq"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ckn2b")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="PlayerAttackHitscan" type="Area2D"]
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+sprite_frames = SubResource("SpriteFrames_odhqq")
+
+[node name="Hitbox" type="CollisionPolygon2D" parent="."]
+scale = Vector2(1.15, 1.15)
+polygon = PackedVector2Array(-101, 54, -101, 39, -98, 23, -93, 5, -87, -12, -79, -27, -65, -41, -51, -55, -40, -62, -25, -71, -9, -76, 2, -78, 18, -75, 30, -71, 42, -62, 54, -51, 65, -39, 75, -25, 81, -10, 86, 2, 91, 17, 96, 34, 98, 49, 101, 64, 102, 80)

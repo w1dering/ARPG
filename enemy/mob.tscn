@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3 uid="uid://bplk7ph8y65ba"]
+
+[ext_resource type="Script" path="res://enemy/mob.gd" id="1_of7ee"]
+[ext_resource type="Texture2D" uid="uid://cblx206ou74kd" path="res://enemy/sprites/mob_final.png" id="2_gtglp"]
+
+[sub_resource type="PackedScene" id="PackedScene_16muq"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_rw7iw"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_gtglp")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vjqte"]
+size = Vector2(131.688, 144.594)
+
+[node name="Mob" type="Area2D"]
+script = ExtResource("1_of7ee")
+enemyType = SubResource("PackedScene_16muq")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.896713, 0.896714)
+sprite_frames = SubResource("SpriteFrames_rw7iw")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+position = Vector2(0.15625, -0.296875)
+shape = SubResource("RectangleShape2D_vjqte")
+
+[node name="TimerInvulnerability" type="Timer" parent="."]
+wait_time = 0.32
+one_shot = true
+
+[node name="TimerKnockback" type="Timer" parent="."]
+wait_time = 0.075
+one_shot = true
+
+[node name="TimerAttackHitscan" type="Timer" parent="."]
+wait_time = 0.05
+one_shot = true
+
+[node name="TimerAttackPostAnimation" type="Timer" parent="."]
+wait_time = 0.15
+one_shot = true
+
+[node name="TimerAttackCD" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
+[connection signal="area_exited" from="." to="." method="_on_area_exited"]
+[connection signal="timeout" from="TimerInvulnerability" to="." method="_on_timer_invulnerability_timeout"]
+[connection signal="timeout" from="TimerKnockback" to="." method="_on_timer_knockback_timeout"]
+[connection signal="timeout" from="TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
+[connection signal="timeout" from="TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]
+[connection signal="timeout" from="TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]

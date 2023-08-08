@@ -1,0 +1,13 @@
+[gd_scene load_steps=5 format=3 uid="uid://ui4wntxjm4dt"]
+
+[ext_resource type="Script" path="res://main.gd" id="1_lfe5p"]
+[ext_resource type="PackedScene" uid="uid://bplk7ph8y65ba" path="res://enemy/mob.tscn" id="2_3xxld"]
+[ext_resource type="PackedScene" uid="uid://s5s2r57irkoy" path="res://player/player.tscn" id="2_lyvah"]
+[ext_resource type="PackedScene" uid="uid://c7d4cbwcp8la1" path="res://enemy/shadow.tscn" id="3_pveiu"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_lfe5p")
+mob_scene = ExtResource("2_3xxld")
+shadow_scene = ExtResource("3_pveiu")
+
+[node name="Player" parent="." instance=ExtResource("2_lyvah")]

@@ -1,0 +1,25 @@
+[gd_scene load_steps=4 format=3 uid="uid://bu56tgqquswux"]
+
+[ext_resource type="Script" path="res://enemy/shadow_hitscan_attack.gd" id="1_2c8de"]
+[ext_resource type="Texture2D" uid="uid://67vlthoanbbu" path="res://enemy/sprites/enemy_slash.png" id="1_ukc6s"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_dpj86"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_ukc6s")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[node name="ShadowHitscanAttack" type="Area2D"]
+script = ExtResource("1_2c8de")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+sprite_frames = SubResource("SpriteFrames_dpj86")
+
+[node name="Hitbox" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-101, 54, -101, 39, -98, 23, -93, 5, -87, -12, -79, -27, -65, -41, -51, -55, -40, -62, -25, -71, -9, -76, 2, -78, 18, -75, 30, -71, 42, -62, 54, -51, 65, -39, 75, -25, 81, -10, 86, 2, 91, 17, 96, 34, 98, 49, 101, 64, 102, 80)

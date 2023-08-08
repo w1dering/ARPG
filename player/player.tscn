@@ -1,0 +1,67 @@
+[gd_scene load_steps=5 format=3 uid="uid://s5s2r57irkoy"]
+
+[ext_resource type="Script" path="res://player/player.gd" id="1_dqrc4"]
+[ext_resource type="Texture2D" uid="uid://udmyug0tshqj" path="res://player/sprites/kazuha_final.png" id="2_6apvk"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ag20e"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_6apvk")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8w7qm"]
+size = Vector2(53.2558, 49.1803)
+
+[node name="Player" type="Area2D"]
+script = ExtResource("1_dqrc4")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -1)
+scale = Vector2(0.253999, 0.253999)
+sprite_frames = SubResource("SpriteFrames_ag20e")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+position = Vector2(-4.25, -1.90735e-06)
+scale = Vector2(2.15, 3.05)
+shape = SubResource("RectangleShape2D_8w7qm")
+
+[node name="TimerDash" type="Timer" parent="."]
+wait_time = 0.25
+one_shot = true
+
+[node name="TimerDashCD" type="Timer" parent="."]
+wait_time = 0.2
+one_shot = true
+
+[node name="TimerGuard" type="Timer" parent="."]
+wait_time = 0.25
+one_shot = true
+
+[node name="TimerAttackHitscan" type="Timer" parent="."]
+wait_time = 0.05
+one_shot = true
+
+[node name="TimerAttackPostAnimation" type="Timer" parent="."]
+wait_time = 0.15
+one_shot = true
+
+[node name="TimerAttackCD" type="Timer" parent="."]
+wait_time = 0.133
+one_shot = true
+
+[node name="TimerInvulnerability" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
+[connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]
+[connection signal="timeout" from="TimerDashCD" to="." method="_on_timer_dash_cd_timeout"]
+[connection signal="timeout" from="TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
+[connection signal="timeout" from="TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]
+[connection signal="timeout" from="TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
+[connection signal="timeout" from="TimerInvulnerability" to="." method="_on_timer_invulnerability_timeout"]

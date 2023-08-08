@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://ui4wntxjm4dt"]
+
+[ext_resource type="Script" path="res://main.gd" id="1_lfe5p"]
+[ext_resource type="PackedScene" uid="uid://s5s2r57irkoy" path="res://player/player.tscn" id="2_lyvah"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_lfe5p")
+
+[node name="Player" parent="." instance=ExtResource("2_lyvah")]
+
+[node name="MobSpawnTimer" type="Timer" parent="."]
+one_shot = true
+autostart = true
+
+[connection signal="timeout" from="MobSpawnTimer" to="." method="_on_mob_spawn_timer_timeout"]
