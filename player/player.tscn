@@ -42,7 +42,7 @@ one_shot = true
 wait_time = 0.2
 one_shot = true
 
-[node name="TimerGuard" type="Timer" parent="."]
+[node name="TimerGuardPerfect" type="Timer" parent="."]
 wait_time = 0.25
 one_shot = true
 
@@ -66,6 +66,7 @@ one_shot = true
 [connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]
 [connection signal="timeout" from="TimerDashPerfect" to="." method="_on_timer_dash_perfect_timeout"]
 [connection signal="timeout" from="TimerDashCD" to="." method="_on_timer_dash_cd_timeout"]
+[connection signal="timeout" from="TimerGuardPerfect" to="." method="_on_timer_guard_perfect_timeout"]
 [connection signal="timeout" from="TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
 [connection signal="timeout" from="TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]
 [connection signal="timeout" from="TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
