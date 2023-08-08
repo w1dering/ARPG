@@ -34,6 +34,10 @@ shape = SubResource("RectangleShape2D_8w7qm")
 wait_time = 0.25
 one_shot = true
 
+[node name="TimerDashPerfect" type="Timer" parent="."]
+wait_time = 0.1
+one_shot = true
+
 [node name="TimerDashCD" type="Timer" parent="."]
 wait_time = 0.2
 one_shot = true
@@ -60,6 +64,7 @@ one_shot = true
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
 [connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]
+[connection signal="timeout" from="TimerDashPerfect" to="." method="_on_timer_dash_perfect_timeout"]
 [connection signal="timeout" from="TimerDashCD" to="." method="_on_timer_dash_cd_timeout"]
 [connection signal="timeout" from="TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
 [connection signal="timeout" from="TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]

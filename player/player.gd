@@ -1,6 +1,9 @@
 extends Area2D
 
-@export var speed = 500
+@export var maxSpeed = 500
+@export var acceleration = 4000
+var currentSpeed = 0
+var previousInputDir
 @export var dashingSpeed = 5000
 @export var hp = 100
 @export var damageOnAttack = 20
@@ -20,6 +23,7 @@ var isInvulnerable = false
 var canMove = true
 var isDashing = false
 var canDash = true
+var canPerfectDash = false
 var dashingDir = Vector2.ZERO
 
 var isAttacking = false
@@ -50,11 +54,18 @@ func _process(delta):
 	
 	if inputDir.length() > 0:
 		inputDir = inputDir.normalized()
+		previousInputDir = inputDir
 	
+	if inputDir.length() == 0 and currentSpeed > 0:
+		currentSpeed = 0
 	# stops WASD movement if dashing, blocking
 	if !isMidAction:
 		# WASD movement
-		position += inputDir * speed * delta
+		if currentSpeed < maxSpeed and inputDir.length() != 0:
+			currentSpeed += acceleration * delta
+		if currentSpeed > maxSpeed:
+			currentSpeed = maxSpeed
+		position += inputDir * currentSpeed * delta
 		
 		# attacking - can hold for continuous attacks
 		if Input.is_action_pressed("LMB") and canAttack:
@@ -72,10 +83,14 @@ func _process(delta):
 	else:
 		# dash
 		if Input.is_action_just_pressed("RMB") and canDash:
+			currentSpeed = maxSpeed
 			$TimerDash.start()
 			isDashing = true
 			canDash = false
+			isInvulnerable = true
+			canPerfectDash = true
 			dashingDir = Vector2.LEFT if inputDir == Vector2.ZERO else inputDir
+			$TimerDashPerfect.start()
 			
 			if isAttacking:
 				isAttacking = false
@@ -90,10 +105,11 @@ func _process(delta):
 	if $TimerDash.get_time_left() > 0 and isDashing:
 		if inputDir != Vector2.ZERO and dashingDir != inputDir:
 			dashingDir = inputDir
-		# base speed of walking
-		position += dashingDir * speed * delta
+		# base maxSpeed of walking
+		position += dashingDir * maxSpeed * delta
 		# added boost due to dash
 		position += dashingDir * $TimerDash.get_time_left() * dashingSpeed * delta
+		currentSpeed = maxSpeed
 		
 	position.x = clamp(position.x, 0, get_viewport_rect().size.x)
 	position.y = clamp(position.y, 0, get_viewport_rect().size.y)
@@ -129,7 +145,10 @@ func _on_timer_invulnerability_timeout():
 	isInvulnerable = false
 
 func reduce_hp(amount):
-	if (!isInvulnerable):
+	if canPerfectDash:
+		print("perfect dash")
+		# effects of perfect dash here
+	if !isInvulnerable:
 		hp -= amount
 		# if hp <= 0 game_over()
 		
@@ -141,6 +160,9 @@ func _on_area_entered(area):
 	# prevents player from taking damage from their own attack
 	if area != attackHitscanInstance:
 		reduce_hp(area.damage)
-		print(area.damage)
 	# elif area == get_node() enemy attack
 	#	reduce_hp(mob.damageOnAttack)
+
+
+func _on_timer_dash_perfect_timeout():
+	canPerfectDash = false

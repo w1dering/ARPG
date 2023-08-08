@@ -44,7 +44,7 @@ func _process(delta):
 		if !canAttack:
 			move(-pathToPlayer, delta)
 		else:
-			if pathToPlayer.length() <= abs(width - player.width) + (attackHitscanInstance.height) / 2:
+			if pathToPlayer.length() <= 170:
 				attack(pathToPlayer)
 			else:
 				move(pathToPlayer, delta)
