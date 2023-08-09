@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://ce6256cg8eywq"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_5vsny"]
+
+[node name="HUD" type="CanvasLayer"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_5vsny")

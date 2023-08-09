@@ -103,7 +103,6 @@ func _process(delta):
 			$TimerAttackHitscan.stop()
 			$TimerAttackCD.stop()
 			$TimerAttackPostAnimation.stop()
-		
 	elif Input.is_action_just_released("key_space"):
 		isGuarding = false
 		canMove = true
@@ -113,8 +112,8 @@ func _process(delta):
 		$TimerDash.start()
 		isDashing = true
 		canDash = false
-		make_invulnerable($TimerDash.wait_time)
 		canDashPerfect = true
+		make_invulnerable($TimerDash.wait_time)
 		dashingDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
 		$TimerDashPerfect.start()
 		
