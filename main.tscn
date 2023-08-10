@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://ui4wntxjm4dt"]
+[gd_scene load_steps=4 format=3 uid="uid://ui4wntxjm4dt"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_lfe5p"]
 [ext_resource type="PackedScene" uid="uid://s5s2r57irkoy" path="res://player/player.tscn" id="2_lyvah"]
+[ext_resource type="PackedScene" uid="uid://ce6256cg8eywq" path="res://hud/hud.tscn" id="3_boj5r"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_lfe5p")
@@ -11,5 +12,7 @@ script = ExtResource("1_lfe5p")
 [node name="MobSpawnTimer" type="Timer" parent="."]
 one_shot = true
 autostart = true
+
+[node name="HUD" parent="." instance=ExtResource("3_boj5r")]
 
 [connection signal="timeout" from="MobSpawnTimer" to="." method="_on_mob_spawn_timer_timeout"]

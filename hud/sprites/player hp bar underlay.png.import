@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmn6vxn1ujc1a"
-path="res://.godot/imported/base health bar.png-55265691ad6e4bfafd8ba22a6f763eb9.ctex"
+uid="uid://cr4m5hoor5nco"
+path="res://.godot/imported/player hp bar underlay.png-739318d509e445306ae4f3ed207d7017.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://hud/base health bar.png"
-dest_files=["res://.godot/imported/base health bar.png-55265691ad6e4bfafd8ba22a6f763eb9.ctex"]
+source_file="res://hud/sprites/player hp bar underlay.png"
+dest_files=["res://.godot/imported/player hp bar underlay.png-739318d509e445306ae4f3ed207d7017.ctex"]
 
 [params]
 

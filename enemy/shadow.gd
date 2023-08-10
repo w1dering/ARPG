@@ -29,8 +29,8 @@ func _ready():
 	attackHitscanInstance.width = abs(maxes.x - mins.x)
 	attackHitscanInstance.height = abs(maxes.y - mins.y)
 	
-	width = $"Hitbox".get_shape().get_rect().size.x
-	height = $"Hitbox".get_shape().get_rect().size.y
+	width = $Hitbox.get_shape().get_rect().size.x
+	height = $Hitbox.get_shape().get_rect().size.y
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):

@@ -1,11 +1,14 @@
 extends Area2D
 
+signal playerHPChanged
+
 @export var maxSpeed = 500
 @export var acceleration = 4000
 var currentSpeed = 0
 var directionFacing = Vector2.RIGHT
 @export var dashingSpeed = 5000
-@export var hp = 100
+@export var maxHP = 100
+var HP = 100
 @export var damageOnAttack = 20
 @export var knockbackStrength = 10
 
@@ -113,7 +116,6 @@ func _process(delta):
 		isDashing = true
 		canDash = false
 		canDashPerfect = true
-		make_invulnerable($TimerDash.wait_time)
 		dashingDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
 		$TimerDashPerfect.start()
 		
@@ -185,34 +187,36 @@ func _on_timer_attack_cd_timeout():
 func _on_area_entered(area):
 	# prevents player from taking damage from their own attack
 	if area != attackHitscanInstance:
-		reduce_hp(area.damage)
+		reduce_HP(area.damage)
 	# elif area == get_node() enemy attack
-	#	reduce_hp(mob.damageOnAttack)
+	#	reduce_HP(mob.damageOnAttack)
 
-func reduce_hp(amount):
-	if canDashPerfect:
-		print("perfect dash")
-		# effects of perfect dash here
-	elif canGuardPerfect:
-		print("parried")
-	elif isGuarding:
-		print("guarded")
-	elif !isInvulnerable:
-		hp -= amount
-		# if hp <= 0 game_over()
-		
-		make_invulnerable(2.0)
-		# play hit and invulnerable animation
+func reduce_HP(amount):
+	if !isInvulnerable:
+		if canDashPerfect:
+			print("perfect dash")
+			# effects of perfect dash here
+		elif canGuardPerfect:
+			print("parried")
+		elif isGuarding:
+			print("guarded")
+		else:
+			print("hit")
+			HP -= amount
+			playerHPChanged.emit(HP)
+			# if HP <= 0 game_over()
+			make_invulnerable(2.0)
+			# play hit and invulnerable animation
 
 func _on_timer_dash_perfect_timeout():
 	canDashPerfect = false
-
 
 func _on_timer_guard_perfect_timeout():
 	canGuardPerfect = false
 
 func make_invulnerable(time):
 	$TimerInvulnerability.wait_time = time
+	$TimerInvulnerability.start()
 	isInvulnerable = true
 
 func _on_timer_invulnerability_timeout():

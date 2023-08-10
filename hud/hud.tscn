@@ -1,8 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://ce6256cg8eywq"]
+[gd_scene load_steps=5 format=3 uid="uid://ce6256cg8eywq"]
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_5vsny"]
+[ext_resource type="Script" path="res://hud/sprites/hud.gd" id="1_okkl1"]
+[ext_resource type="Texture2D" uid="uid://cr4m5hoor5nco" path="res://hud/sprites/player hp bar underlay.png" id="2_cxxfc"]
+[ext_resource type="Texture2D" uid="uid://b5d68l3k6y8j5" path="res://hud/sprites/player hp bar overlay.png" id="3_f1d0m"]
+[ext_resource type="Texture2D" uid="uid://bk4o5rfp5vn0k" path="res://hud/sprites/player hp bar texture.png" id="4_kjybn"]
 
 [node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_okkl1")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-sprite_frames = SubResource("SpriteFrames_5vsny")
+[node name="PlayerHealthBar" type="TextureProgressBar" parent="."]
+offset_right = 200.0
+offset_bottom = 20.0
+value = 100.0
+texture_under = ExtResource("2_cxxfc")
+texture_over = ExtResource("3_f1d0m")
+texture_progress = ExtResource("4_kjybn")

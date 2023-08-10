@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cl4fdoc2h47c0"
-path="res://.godot/imported/health segment.png-c6328cc7a2572e9641a5580a9d7fad3a.ctex"
+uid="uid://b5d68l3k6y8j5"
+path="res://.godot/imported/player hp bar overlay.png-ea849e2e583cca293e6c9942c202c7c7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://hud/health segment.png"
-dest_files=["res://.godot/imported/health segment.png-c6328cc7a2572e9641a5580a9d7fad3a.ctex"]
+source_file="res://hud/sprites/player hp bar overlay.png"
+dest_files=["res://.godot/imported/player hp bar overlay.png-ea849e2e583cca293e6c9942c202c7c7.ctex"]
 
 [params]
 

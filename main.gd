@@ -7,6 +7,9 @@ var screenSize
 
 func _ready():
 	screenSize = get_viewport_rect().size
+	$HUD.player = $Player
+	$Player.connect("playerHPChanged", player_HP_change)
+	$HUD.change_player_health_bar(100)
 	pass
 
 func _init():
@@ -21,3 +24,6 @@ func _on_mob_spawn_timer_timeout():
 	shadow.position.y = screenSize.y / 2
 	shadow.player = $Player
 	add_child(shadow)
+
+func player_HP_change(amount):
+	$HUD.change_player_health_bar(amount)
