@@ -15,10 +15,11 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8w7qm"]
-size = Vector2(53.2558, 49.1803)
+size = Vector2(108, 148)
 
 [node name="Player" type="Area2D"]
 script = ExtResource("1_dqrc4")
+dashSpeed = 1500
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -1)
@@ -26,8 +27,7 @@ scale = Vector2(0.253999, 0.253999)
 sprite_frames = SubResource("SpriteFrames_ag20e")
 
 [node name="Hitbox" type="CollisionShape2D" parent="."]
-position = Vector2(-4.25, -1.90735e-06)
-scale = Vector2(2.15, 3.05)
+position = Vector2(1.90735e-06, -1.90735e-06)
 shape = SubResource("RectangleShape2D_8w7qm")
 
 [node name="TimerDash" type="Timer" parent="."]
@@ -61,6 +61,9 @@ one_shot = true
 [node name="TimerInvulnerability" type="Timer" parent="."]
 wait_time = 2.0
 one_shot = true
+
+[node name="CameraTarget" type="RemoteTransform2D" parent="."]
+remote_path = NodePath(".")
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
 [connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]

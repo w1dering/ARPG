@@ -12,13 +12,22 @@ var HP = 100
 @export var damageOnAttack = 20
 @export var knockbackStrength = 10
 
-var bufferedInputs: Array # will have 5 (or 10) slots of inputs that are buffered
+@export var spriteFrameRate = 60
+@export var timerDashBaseTime = 0.25
+@export var timerDashPerfectBaseTime = 0.1
+@export var timerDashCDBaseTime = 0.2
+@export var timerGuardPerfectBaseTime = 0.1
+@export var timerAttackHitscanBaseTime = 0.05
+@export var timerAttackPostAnimationBaseTime = 0.15
+@export var timerAttackCDBaseTime = 0.133
 
 var attackHitscanInstance
 var attackPostAnimationInstance
 
-var width
-var height
+var size
+
+var boundsTopLeft
+var boundsSize
 
 var keepCentered = false
 
@@ -29,6 +38,8 @@ var isDashing = false
 var canDash = true
 var canDashPerfect = false
 var dashDir = Vector2.ZERO
+var isInSlowMo = false
+var slowMoTimer: float
 
 var isGuarding = false
 var canGuard = true
@@ -39,14 +50,43 @@ var canAttack = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
+	$TimerDash.wait_time = timerDashBaseTime
+	$TimerDashPerfect.wait_time = timerDashPerfectBaseTime
+	$TimerDashCD.wait_time = timerDashCDBaseTime
+	$TimerGuardPerfect.wait_time = timerGuardPerfectBaseTime
+	$TimerAttackHitscan.wait_time = timerAttackHitscanBaseTime
+	$TimerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
+	$TimerAttackCD.wait_time = timerAttackCDBaseTime
+	
 	position = get_viewport_rect().size / 2
 	attackHitscanInstance = load("res://player/player_attack_hitscan.tscn").instantiate()
 	attackPostAnimationInstance = load("res://player/player_attack_post_animation.tscn").instantiate()
-	width = $Hitbox.get_shape().get_rect().size.x
-	height = $Hitbox.get_shape().get_rect().size.y
+	size = $Hitbox.get_shape().get_rect().size
+	print("player size")
+	print(size)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if isInSlowMo:
+		# ensures player movement will always be constant during slow mo
+		$TimerDash.wait_time = timerDashBaseTime * Engine.time_scale
+		$TimerDashPerfect.wait_time = timerDashPerfectBaseTime * Engine.time_scale
+		$TimerDashCD.wait_time = timerDashCDBaseTime * Engine.time_scale
+		$TimerGuardPerfect.wait_time = timerGuardPerfectBaseTime * Engine.time_scale
+		$TimerAttackHitscan.wait_time = timerAttackHitscanBaseTime * Engine.time_scale
+		$TimerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime * Engine.time_scale
+		$TimerAttackCD.wait_time = timerAttackCDBaseTime * Engine.time_scale
+		print($TimerAttackHitscan.wait_time)
+		delta /= Engine.time_scale
+		slowMoTimer += delta
+		if slowMoTimer >= 1:
+			Engine.time_scale = (slowMoTimer - 1) / 2 + 0.5
+		if slowMoTimer >= 2:
+			isInSlowMo = false
+			slowMoTimer = 0
+			Engine.time_scale = 1
+		
+	
 	var inputDir = Vector2.ZERO
 	
 	# WASD movement
@@ -74,7 +114,7 @@ func _process(delta):
 		isAttacking = true
 		canAttack = false
 		
-		var mousePosition = get_viewport().get_mouse_position()
+		var mousePosition = get_global_mouse_position()
 		var attackVector = mousePosition - position
 		attackHitscanInstance.position = attackVector.normalized() * 50
 		attackHitscanInstance.rotation = attackVector.angle() + PI / 2
@@ -144,7 +184,7 @@ func _process(delta):
 		# base maxSpeed of walking
 		move(dashDir, maxSpeed, delta)
 		# added boost due to dash
-		move(dashDir, dashSpeed * $TimerDash.time_left, delta)
+		move(dashDir, dashSpeed * $TimerDash.time_left / timerDashBaseTime, delta if !isInSlowMo else delta * 2)
 		currentSpeed = maxSpeed
 	elif canMove and !isGuarding:
 		if currentSpeed < maxSpeed and inputDir.length() != 0:
@@ -154,8 +194,8 @@ func _process(delta):
 			
 		move(inputDir, currentSpeed, delta)
 	
-	position.x = clamp(position.x, 0, get_viewport_rect().size.x)
-	position.y = clamp(position.y, 0, get_viewport_rect().size.y)
+	position.x = clamp(position.x, boundsTopLeft.x + size.x / 2, boundsTopLeft.x + boundsSize.x - size.x / 2)
+	position.y = clamp(position.y, boundsTopLeft.y + size.y / 2, boundsTopLeft.y + boundsSize.y - size.y / 2)
 
 func _on_timer_dash_timeout():
 	$TimerDashCD.start()
@@ -198,6 +238,8 @@ func reduce_HP(amount):
 	if !isInvulnerable:
 		if canDashPerfect:
 			print("perfect dash")
+			Engine.time_scale = 0.5
+			isInSlowMo = true
 			# effects of perfect dash here
 		elif canGuardPerfect:
 			print("parried")
