@@ -6,7 +6,7 @@ signal playerHPChanged
 @export var acceleration = 4000
 var currentSpeed = 0
 var directionFacing = Vector2.RIGHT
-@export var dashingSpeed = 5000
+@export var dashSpeed = 5000
 @export var maxHP = 100
 var HP = 100
 @export var damageOnAttack = 20
@@ -28,7 +28,7 @@ var canMove = true
 var isDashing = false
 var canDash = true
 var canDashPerfect = false
-var dashingDir = Vector2.ZERO
+var dashDir = Vector2.ZERO
 
 var isGuarding = false
 var canGuard = true
@@ -42,8 +42,8 @@ func _ready():
 	position = get_viewport_rect().size / 2
 	attackHitscanInstance = load("res://player/player_attack_hitscan.tscn").instantiate()
 	attackPostAnimationInstance = load("res://player/player_attack_post_animation.tscn").instantiate()
-	width = $"Hitbox".get_shape().get_rect().size.x
-	height = $"Hitbox".get_shape().get_rect().size.y
+	width = $Hitbox.get_shape().get_rect().size.x
+	height = $Hitbox.get_shape().get_rect().size.y
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
@@ -116,7 +116,7 @@ func _process(delta):
 		isDashing = true
 		canDash = false
 		canDashPerfect = true
-		dashingDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
+		dashDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
 		$TimerDashPerfect.start()
 		
 		# dash-cancelling an attack
@@ -139,12 +139,12 @@ func _process(delta):
 			canGuardPerfect = false
 			$TimerGuardPerfect.stop()
 	elif $TimerDash.get_time_left() > 0 and isDashing:
-		if inputDir != Vector2.ZERO and dashingDir != inputDir:
-			dashingDir = inputDir
+		if inputDir != Vector2.ZERO and dashDir != inputDir:
+			dashDir = inputDir
 		# base maxSpeed of walking
-		position += dashingDir * maxSpeed * delta
+		move(dashDir, maxSpeed, delta)
 		# added boost due to dash
-		position += dashingDir * $TimerDash.get_time_left() * dashingSpeed * delta
+		move(dashDir, dashSpeed * $TimerDash.time_left, delta)
 		currentSpeed = maxSpeed
 	elif canMove and !isGuarding:
 		if currentSpeed < maxSpeed and inputDir.length() != 0:
@@ -152,7 +152,7 @@ func _process(delta):
 			if currentSpeed > maxSpeed:
 				currentSpeed = maxSpeed
 			
-		position += inputDir * currentSpeed * delta
+		move(inputDir, currentSpeed, delta)
 	
 	position.x = clamp(position.x, 0, get_viewport_rect().size.x)
 	position.y = clamp(position.y, 0, get_viewport_rect().size.y)
@@ -190,6 +190,9 @@ func _on_area_entered(area):
 		reduce_HP(area.damage)
 	# elif area == get_node() enemy attack
 	#	reduce_HP(mob.damageOnAttack)
+
+func move(direction, speed, delta):
+	position += direction.normalized() * speed * delta
 
 func reduce_HP(amount):
 	if !isInvulnerable:

@@ -10,10 +10,6 @@ func _ready():
 	$HUD.player = $Player
 	$Player.connect("playerHPChanged", player_HP_change)
 	$HUD.change_player_health_bar(100)
-	pass
-
-func _init():
-	pass
 
 func _process(delta):
 	pass

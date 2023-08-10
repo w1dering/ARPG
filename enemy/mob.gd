@@ -51,8 +51,7 @@ func reduce_hp(amount):
 		# await death animation timer timeout
 		queue_free()
 	
-	isInvulnerable = true
-	$TimerInvulnerability.start()
+	make_invulnerable(0.32)
 
 func knockback(direction, magnitude):
 	if !isGettingKnockedBack:
@@ -75,8 +74,6 @@ func _on_area_exited(area):
 	#elif player.attackHitscanInstance != null and area == player.attackHitscanInstance:
 	#	isInPlayerAttack = false
 
-func _on_timer_invulnerability_timeout():
-	isInvulnerable = false
 
 func _on_timer_knockback_timeout():
 	isGettingKnockedBack = false
@@ -110,6 +107,13 @@ func attack(direction):
 	attackHitscanInstance.show()
 	add_child(attackHitscanInstance)
 	
+func make_invulnerable(time):
+	$TimerInvulnerability.wait_time = time
+	$TimerInvulnerability.start()
+	isInvulnerable = true
+
+func _on_timer_invulnerability_timeout():
+	isInvulnerable = false
 
 func move(direction, delta):
 	position += direction.normalized() * speed * delta

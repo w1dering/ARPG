@@ -1,5 +1,10 @@
 extends "res://enemy/mob.gd"
 
+var canDash = true
+var isDashing = false
+var dashingDir = Vector2.ZERO
+var dashSpeed = 5000
+
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	hp = 100
@@ -39,16 +44,33 @@ func _process(delta):
 	
 	if isGettingKnockedBack:
 		position += knockbackVector * delta
+	elif isDashing:
+		position += dashingDir * $TimerDash.get_time_left() * dashSpeed * delta
 	elif canMove:
 		var pathToPlayer = player.position - position
-		if !canAttack:
-			move(-pathToPlayer, delta)
-		else:
-			if pathToPlayer.length() <= 170:
+		if pathToPlayer.length() <= 170:
+			if canAttack:
 				attack(pathToPlayer)
 			else:
+				if canDash:
+					canDash = false
+					isDashing = true
+					dashingDir = -pathToPlayer.normalized()
+					$TimerDash.start()
+					make_invulnerable($TimerDash.wait_time)
+				else:
+					move(-pathToPlayer, delta)
+		else:
+			if canAttack:
 				move(pathToPlayer, delta)
+			else:
+				# incorporate side to side movement
+				pass
 
-func dash(direction, delta):
-	pass
+func _on_timer_dash_timeout():
+	isDashing = false
+	dashingDir = Vector2.ZERO
 
+func _on_timer_attack_cd_timeout():
+	canAttack = true
+	canDash = true
