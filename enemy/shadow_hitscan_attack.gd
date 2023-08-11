@@ -1,5 +1,7 @@
 extends Area2D
 
+signal wasParried
+
 var width
 var height
 var damage
@@ -13,3 +15,6 @@ func _init():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	pass
+
+func was_parried():
+	wasParried.emit()

@@ -19,7 +19,7 @@ size = Vector2(108, 148)
 
 [node name="Player" type="Area2D"]
 script = ExtResource("1_dqrc4")
-dashSpeed = 1500
+dashSpeed = 500
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -1)
@@ -46,6 +46,9 @@ one_shot = true
 wait_time = 0.1
 one_shot = true
 
+[node name="TimerGuardCD" type="Timer" parent="."]
+one_shot = true
+
 [node name="TimerAttackHitscan" type="Timer" parent="."]
 wait_time = 0.05
 one_shot = true
@@ -70,6 +73,7 @@ remote_path = NodePath(".")
 [connection signal="timeout" from="TimerDashPerfect" to="." method="_on_timer_dash_perfect_timeout"]
 [connection signal="timeout" from="TimerDashCD" to="." method="_on_timer_dash_cd_timeout"]
 [connection signal="timeout" from="TimerGuardPerfect" to="." method="_on_timer_guard_perfect_timeout"]
+[connection signal="timeout" from="TimerGuardCD" to="." method="_on_timer_guard_cd_timeout"]
 [connection signal="timeout" from="TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
 [connection signal="timeout" from="TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]
 [connection signal="timeout" from="TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]

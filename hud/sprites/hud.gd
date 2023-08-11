@@ -11,5 +11,4 @@ func _process(delta):
 	pass
 
 func change_player_health_bar(amount):
-	print("health changed")
 	$PlayerHealthBar.value = amount

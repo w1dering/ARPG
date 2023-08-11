@@ -1,52 +1,55 @@
 extends Area2D
 
 signal playerHPChanged
+signal hitStop
+signal shakeScreen
 
-@export var maxSpeed = 500
-@export var acceleration = 4000
-var currentSpeed = 0
-var directionFacing = Vector2.RIGHT
-@export var dashSpeed = 5000
-@export var maxHP = 100
-var HP = 100
-@export var damageOnAttack = 20
-@export var knockbackStrength = 10
+@export var maxSpeed: int = 500
+@export var acceleration: int = 4000
+var currentSpeed: int = 0
+var directionFacing: Vector2 = Vector2.RIGHT
+@export var dashSpeed: int = 5000
+@export var maxHP: int = 100
+var HP: int = 100
+@export var damageOnAttack: int = 20
+@export var knockbackStrength: int = 10
 
-@export var spriteFrameRate = 60
-@export var timerDashBaseTime = 0.25
-@export var timerDashPerfectBaseTime = 0.1
-@export var timerDashCDBaseTime = 0.2
-@export var timerGuardPerfectBaseTime = 0.1
-@export var timerAttackHitscanBaseTime = 0.05
-@export var timerAttackPostAnimationBaseTime = 0.15
-@export var timerAttackCDBaseTime = 0.133
+@export var spriteFrameRate: int = 60
+@export var timerDashBaseTime: float = 0.25
+@export var timerDashPerfectBaseTime: float = 0.1
+@export var timerDashCDBaseTime: float = 0.2
+@export var timerGuardPerfectBaseTime: float = 0.1
+@export var timerGuardCDBaseTime: float = 0.5
+@export var timerAttackHitscanBaseTime: float = 0.05
+@export var timerAttackPostAnimationBaseTime: float = 0.15
+@export var timerAttackCDBaseTime: float = 0.133
 
-var attackHitscanInstance
-var attackPostAnimationInstance
+var attackHitscanInstance: Node2D
+var attackPostAnimationInstance: Node2D
 
-var size
+var size: Vector2
 
-var boundsTopLeft
-var boundsSize
+var boundsTopLeft: Vector2
+var boundsSize: Vector2
 
-var keepCentered = false
+var keepCentered: bool = false
 
-var isInvulnerable = false
-var canMove = true
+var isInvulnerable: bool = false
+var canMove: bool = true
 
-var isDashing = false
-var canDash = true
-var canDashPerfect = false
-var dashDir = Vector2.ZERO
-var isInSlowMo = false
+var isDashing: bool = false
+var canDash: bool = true
+var canDashPerfect: bool = false
+var currentDashDir: Vector2 = Vector2.ZERO
+var isInSlowMo: bool = false
 var slowMoTimer: float
 
-var isGuarding = false
-var canGuard = true
-var canGuardPerfect = false
+var isGuarding: bool = false
+var canGuard: bool = true
+var canGuardPerfect: bool = false
 
-var isAttacking = false
-var canAttack = true
+var isAttacking: bool = false
+var canAttack: bool = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -54,38 +57,42 @@ func _ready():
 	$TimerDashPerfect.wait_time = timerDashPerfectBaseTime
 	$TimerDashCD.wait_time = timerDashCDBaseTime
 	$TimerGuardPerfect.wait_time = timerGuardPerfectBaseTime
+	$TimerGuardCD.wait_time = timerGuardCDBaseTime
 	$TimerAttackHitscan.wait_time = timerAttackHitscanBaseTime
 	$TimerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
 	$TimerAttackCD.wait_time = timerAttackCDBaseTime
 	
-	position = get_viewport_rect().size / 2
+	position = Vector2(800, 800)
+	
 	attackHitscanInstance = load("res://player/player_attack_hitscan.tscn").instantiate()
+	attackHitscanInstance.z_index = 100
+	
 	attackPostAnimationInstance = load("res://player/player_attack_post_animation.tscn").instantiate()
+	attackPostAnimationInstance.z_index = 100
 	size = $Hitbox.get_shape().get_rect().size
-	print("player size")
-	print(size)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if isInSlowMo:
+		isInvulnerable = true
 		# ensures player movement will always be constant during slow mo
 		$TimerDash.wait_time = timerDashBaseTime * Engine.time_scale
 		$TimerDashPerfect.wait_time = timerDashPerfectBaseTime * Engine.time_scale
 		$TimerDashCD.wait_time = timerDashCDBaseTime * Engine.time_scale
 		$TimerGuardPerfect.wait_time = timerGuardPerfectBaseTime * Engine.time_scale
+		$TimerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
 		$TimerAttackHitscan.wait_time = timerAttackHitscanBaseTime * Engine.time_scale
 		$TimerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime * Engine.time_scale
 		$TimerAttackCD.wait_time = timerAttackCDBaseTime * Engine.time_scale
-		print($TimerAttackHitscan.wait_time)
 		delta /= Engine.time_scale
 		slowMoTimer += delta
 		if slowMoTimer >= 1:
-			Engine.time_scale = (slowMoTimer - 1) / 2 + 0.5
+			Engine.time_scale = (slowMoTimer - 1) * 3 / 4 + 0.25
 		if slowMoTimer >= 2:
 			isInSlowMo = false
+			isInvulnerable = false
 			slowMoTimer = 0
 			Engine.time_scale = 1
-		
 	
 	var inputDir = Vector2.ZERO
 	
@@ -102,14 +109,62 @@ func _process(delta):
 	if inputDir.length() > 1:
 		inputDir = inputDir.normalized()
 	
-	if inputDir.length() > 0:
+	if inputDir.length() > 0 and !isDashing:
 		directionFacing = inputDir
 	
 	if inputDir.length() == 0 and currentSpeed > 0:
 		currentSpeed = 0
 	# stops WASD movement if dashing, blocking
 	# attacking - can hold for continuous attacks
-	if Input.is_action_pressed("LMB") and canAttack and !isDashing:
+	if Input.is_action_pressed("LMB"):
+		if canAttack and !isDashing:
+			start_attack()
+			# play swing animation when done
+			
+			# if a guard is attack-cancelled, the cooldown of the guard will shorten afterwards
+			if isGuarding:
+				$TimerGuardCD.wait_time = $TimerAttackHitscan.wait_time + $TimerAttackPostAnimation.wait_time
+				cancel_guard()
+	# second statement allows basically buffering a guard
+	if (Input.is_action_just_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
+		start_guard()
+		cancel_attack()
+	if Input.is_action_just_released("key_space"):
+		cancel_guard()
+	if Input.is_action_just_pressed("RMB") and canDash:
+		start_dash(inputDir)
+		
+		# dash-cancelling an attack
+		cancel_attack()
+		
+		# dash-cancelling a guard
+		if isGuarding:
+			$TimerGuardCD.wait_time = $TimerDash.wait_time
+			cancel_guard()
+	if $TimerDash.get_time_left() > 0 and isDashing:
+		if inputDir != Vector2.ZERO and abs(currentDashDir.angle_to(inputDir)) <= PI / 2 + 0.2:
+			# +0.2 is there for insurance bc angles that are exactly PI/2 might get rounded down 
+			currentDashDir = inputDir
+			directionFacing = inputDir
+		# base maxSpeed of walking
+		move(currentDashDir, maxSpeed, delta)
+		# added boost due to dash
+		move(currentDashDir, dashSpeed * $TimerDash.time_left / $TimerDash.wait_time, delta)
+		currentSpeed = maxSpeed
+	
+	if canMove and !isGuarding:
+		if currentSpeed < maxSpeed and inputDir.length() != 0:
+			currentSpeed += acceleration * delta
+			if currentSpeed > maxSpeed:
+				currentSpeed = maxSpeed
+			
+		move(inputDir, currentSpeed, delta)
+	
+	position.x = clamp(position.x, boundsTopLeft.x + size.x / 2, boundsTopLeft.x + boundsSize.x - size.x / 2)
+	position.y = clamp(position.y, boundsTopLeft.y + size.y / 2, boundsTopLeft.y + boundsSize.y - size.y / 2)
+
+func start_attack():
+	if canAttack:
 		$TimerAttackHitscan.start()
 		isAttacking = true
 		canAttack = false
@@ -120,82 +175,55 @@ func _process(delta):
 		attackHitscanInstance.rotation = attackVector.angle() + PI / 2
 		attackHitscanInstance.show()
 		add_child(attackHitscanInstance)
-		# play swing animation when done
-		
-		if isGuarding:
-			isGuarding = false
-			canGuardPerfect = false
-			$TimerGuardPerfect.stop()
-			canMove = true
-	# second statement allows basically buffering a guard
-	elif (Input.is_action_just_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding):
+
+func cancel_attack():
+	if isAttacking:
+		isAttacking = false
+		if $TimerAttackHitscan.time_left > 0:
+			remove_child(attackHitscanInstance)
+			$TimerAttackHitscan.stop()
+		if $TimerAttackPostAnimation.time_left > 0:
+			remove_child(attackPostAnimationInstance)
+			$TimerAttackPostAnimation.stop()
+		$TimerAttackCD.stop()
+		$TimerAttackCD.start()
+
+func start_dash(inputDir):
+	if canDash:
+		currentSpeed = maxSpeed
+		isDashing = true
+		canDash = false
+		canDashPerfect = true
+		$TimerDash.start()
+		$TimerDashPerfect.start()
+		currentDashDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
+
+func cancel_dash():
+	if isDashing:
+		isDashing = false
+		canDashPerfect = false
+		canDash = false
+		$TimerDash.stop()
+		$TimerDashPerfect.stop()
+		$TimerDashCD.start()
+		currentDashDir = Vector2.ZERO
+
+func start_guard():
+	if canGuard:
 		isGuarding = true
 		canGuardPerfect = true
 		$TimerGuardPerfect.start()
 		canMove = false
 		currentSpeed = 0
-		
-		if isAttacking:
-			isAttacking = false
-			
-			if $TimerAttackHitscan.time_left > 0:
-				remove_child(attackHitscanInstance)
-			if $TimerAttackPostAnimation.time_left > 0:
-				remove_child(attackPostAnimationInstance)
-			
-			$TimerAttackHitscan.stop()
-			$TimerAttackCD.stop()
-			$TimerAttackPostAnimation.stop()
-	elif Input.is_action_just_released("key_space"):
+
+func cancel_guard():
+	if isGuarding:
+		canGuard = false
 		isGuarding = false
+		canGuardPerfect = false
+		$TimerGuardPerfect.stop()
+		$TimerGuardCD.start()
 		canMove = true
-		canAttack = true
-	elif Input.is_action_just_pressed("RMB") and canDash:
-		currentSpeed = maxSpeed
-		$TimerDash.start()
-		isDashing = true
-		canDash = false
-		canDashPerfect = true
-		dashDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
-		$TimerDashPerfect.start()
-		
-		# dash-cancelling an attack
-		if isAttacking:
-			isAttacking = false
-			
-			if $TimerAttackHitscan.time_left > 0:
-				remove_child(attackHitscanInstance)
-			if $TimerAttackPostAnimation.time_left > 0:
-				remove_child(attackPostAnimationInstance)
-			
-			$TimerAttackHitscan.stop()
-			$TimerAttackCD.stop()
-			$TimerAttackPostAnimation.stop()
-		
-		# dash-cancelling a guard
-		if isGuarding:
-			isGuarding = false
-			canMove = true
-			canGuardPerfect = false
-			$TimerGuardPerfect.stop()
-	elif $TimerDash.get_time_left() > 0 and isDashing:
-		if inputDir != Vector2.ZERO and dashDir != inputDir:
-			dashDir = inputDir
-		# base maxSpeed of walking
-		move(dashDir, maxSpeed, delta)
-		# added boost due to dash
-		move(dashDir, dashSpeed * $TimerDash.time_left / timerDashBaseTime, delta if !isInSlowMo else delta * 2)
-		currentSpeed = maxSpeed
-	elif canMove and !isGuarding:
-		if currentSpeed < maxSpeed and inputDir.length() != 0:
-			currentSpeed += acceleration * delta
-			if currentSpeed > maxSpeed:
-				currentSpeed = maxSpeed
-			
-		move(inputDir, currentSpeed, delta)
-	
-	position.x = clamp(position.x, boundsTopLeft.x + size.x / 2, boundsTopLeft.x + boundsSize.x - size.x / 2)
-	position.y = clamp(position.y, boundsTopLeft.y + size.y / 2, boundsTopLeft.y + boundsSize.y - size.y / 2)
 
 func _on_timer_dash_timeout():
 	$TimerDashCD.start()
@@ -225,36 +253,47 @@ func _on_timer_attack_cd_timeout():
 	canAttack = true
 
 func _on_area_entered(area):
-	# prevents player from taking damage from their own attack
-	if area != attackHitscanInstance:
-		reduce_HP(area.damage)
-	# elif area == get_node() enemy attack
-	#	reduce_HP(mob.damageOnAttack)
-
-func move(direction, speed, delta):
-	position += direction.normalized() * speed * delta
-
-func reduce_HP(amount):
-	if !isInvulnerable:
-		if canDashPerfect:
-			print("perfect dash")
-			Engine.time_scale = 0.5
-			isInSlowMo = true
-			# effects of perfect dash here
+	# prevents player from taking damage from their own attack or when invulnerable
+	if area != attackHitscanInstance and !isInvulnerable:
+		# third condition checks if instance is a mob (which would have area entered) or an attack instance (which would
+		# not have area entered method, as that is handled in the mob script)
+		if canDashPerfect and !isInSlowMo:
+			if !area.has_method("_on_area_entered"):
+				print("perfect dash")
+				Engine.time_scale = 0.25
+				isInSlowMo = true
+				isInvulnerable = true
+				var temp = $TimerDash.time_left
+				$TimerDash.stop()
+				$TimerDash.wait_time = temp / 4
+				$TimerDash.start()
+				$TimerDash.wait_time = timerDashBaseTime / 4
 		elif canGuardPerfect:
 			print("parried")
+			area.was_parried()
 		elif isGuarding:
 			print("guarded")
+			hitStop.emit(0.1)
+			HP -= area.damage / 2
+			playerHPChanged.emit(HP)
+			make_invulnerable(1.0)
 		else:
 			print("hit")
-			HP -= amount
+			hitStop.emit(0.3)
+			shakeScreen.emit(0.3, 10)
+			HP -= area.damage
 			playerHPChanged.emit(HP)
 			# if HP <= 0 game_over()
 			make_invulnerable(2.0)
 			# play hit and invulnerable animation
 
+func move(direction, speed, delta):
+	position += direction.normalized() * speed * delta
+
 func _on_timer_dash_perfect_timeout():
 	canDashPerfect = false
+	if $TimerDash.time_left > 0:
+		make_invulnerable($TimerDash.time_left)
 
 func _on_timer_guard_perfect_timeout():
 	canGuardPerfect = false
@@ -266,3 +305,8 @@ func make_invulnerable(time):
 
 func _on_timer_invulnerability_timeout():
 	isInvulnerable = false
+
+func _on_timer_guard_cd_timeout():
+	canGuard = true
+	if $TimerGuardCD.wait_time != timerGuardCDBaseTime * Engine.time_scale:
+		$TimerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale

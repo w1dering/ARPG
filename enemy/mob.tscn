@@ -17,7 +17,7 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vjqte"]
-size = Vector2(131.688, 144.594)
+size = Vector2(105, 124)
 
 [node name="Mob" type="Area2D"]
 script = ExtResource("1_of7ee")
@@ -50,6 +50,9 @@ one_shot = true
 [node name="TimerAttackCD" type="Timer" parent="."]
 one_shot = true
 
+[node name="TimerParryStun" type="Timer" parent="."]
+one_shot = true
+
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
 [connection signal="area_exited" from="." to="." method="_on_area_exited"]
 [connection signal="timeout" from="TimerInvulnerability" to="." method="_on_timer_invulnerability_timeout"]
@@ -57,3 +60,4 @@ one_shot = true
 [connection signal="timeout" from="TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
 [connection signal="timeout" from="TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]
 [connection signal="timeout" from="TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
+[connection signal="timeout" from="TimerParryStun" to="." method="_on_timer_parry_stun_timeout"]

@@ -5,6 +5,9 @@ extends Area2D
 #signal playerIsInHitbox
 #signal playerIsInAttack
 
+signal hitStop
+signal shakeScreen
+
 var player
 
 # contains a node of the enemy type
@@ -62,11 +65,14 @@ func knockback(direction, magnitude):
 
 func _on_area_entered(area):
 	if player.attackHitscanInstance != null and area == player.attackHitscanInstance and !isInvulnerable:
-		# will only check damage ONCE
-		# if it's a lingering attack, use bool variables (isInPlayerSkill), set it to true on area
-		# enter and false on area exit, and deal damage via _process function
+		hitStop.emit(0.1)
+		shakeScreen.emit(0.1, 3)
 		reduce_hp(player.damageOnAttack)
 		knockback(position - player.position, player.knockbackStrength)
+		isAttacking = false
+		canAttack = false
+		canMove = false
+		cancel_attack()
 
 func _on_area_exited(area):
 	pass
@@ -74,10 +80,20 @@ func _on_area_exited(area):
 	#elif player.attackHitscanInstance != null and area == player.attackHitscanInstance:
 	#	isInPlayerAttack = false
 
+func cancel_attack():
+	if isAttacking:
+		isAttacking = false
+		if $TimerAttackHitscan.time_left > 0:
+			remove_child(attackHitscanInstance)
+			$TimerAttackHitscan.stop()
+		if $TimerAttackPostAnimation.time_left > 0:
+			remove_child(attackPostAnimationInstance)
+			$TimerAttackPostAnimation.stop()
 
 func _on_timer_knockback_timeout():
 	isGettingKnockedBack = false
 	canMove = true
+	$TimerAttackCD.start()
 	knockbackVector = Vector2.ZERO
 
 func _on_timer_attack_hitscan_timeout():
@@ -98,7 +114,7 @@ func _on_timer_attack_post_animation_timeout():
 func _on_timer_attack_cd_timeout():
 	canAttack = true
 
-func attack(direction):
+func start_attack(direction):
 	$TimerAttackHitscan.start()
 	isAttacking = true
 	canAttack = false
@@ -117,3 +133,19 @@ func _on_timer_invulnerability_timeout():
 
 func move(direction, delta):
 	position += direction.normalized() * speed * delta
+
+func was_parried():
+	# play parried animation
+	print("was parried")
+	$TimerParryStun.start()
+	cancel_attack()
+	canMove = false
+	canAttack = false
+
+func _on_timer_parry_stun_timeout():
+	print("parry timed out")
+	canMove = true
+	canAttack = true
+	isGettingKnockedBack = false
+	$TimerAttackCD.start()
+	knockbackVector = Vector2.ZERO

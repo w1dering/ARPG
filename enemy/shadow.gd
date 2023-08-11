@@ -15,6 +15,12 @@ func _ready():
 	
 	attackHitscanInstance = load("res://enemy/shadow_hitscan_attack.tscn").instantiate()
 	attackPostAnimationInstance = load("res://enemy/shadow_attack_post_animation.tscn").instantiate()
+	
+	attackHitscanInstance.z_index = 100
+	attackPostAnimationInstance.z_index = 100
+	
+	attackHitscanInstance.connect("wasParried", was_parried)
+	
 	attackHitscanInstance.damage = damageOnAttack
 	
 	var arr = attackHitscanInstance.get_node("Hitbox").get_polygon()
@@ -39,6 +45,9 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	if player.isInSlowMo:
+		isInvulnerable = false
+	
 	if isGettingKnockedBack or isAttacking:
 		canMove = false
 	
@@ -50,7 +59,7 @@ func _process(delta):
 		var pathToPlayer = player.position - position
 		if pathToPlayer.length() <= 170:
 			if canAttack:
-				attack(pathToPlayer)
+				start_attack(pathToPlayer)
 			else:
 				if canDash:
 					canDash = false

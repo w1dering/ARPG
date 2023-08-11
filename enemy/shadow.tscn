@@ -6,6 +6,9 @@
 [node name="Shadow" instance=ExtResource("1_torwj")]
 script = ExtResource("2_6xtd5")
 
+[node name="Hitbox" parent="." index="1"]
+position = Vector2(0, 1)
+
 [node name="TimerDash" type="Timer" parent="." index="7"]
 wait_time = 0.25
 one_shot = true
