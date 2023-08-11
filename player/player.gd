@@ -275,6 +275,7 @@ func _on_area_entered(area):
 		elif isGuarding:
 			print("guarded")
 			hitStop.emit(0.1)
+			shakeScreen.emit(0.1, 3)
 			HP -= area.damage / 2
 			playerHPChanged.emit(HP)
 			make_invulnerable(1.0)
