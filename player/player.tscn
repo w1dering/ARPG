@@ -19,7 +19,7 @@ size = Vector2(108, 148)
 
 [node name="Player" type="Area2D"]
 script = ExtResource("1_dqrc4")
-dashSpeed = 500
+dashSpeed = 1000
 
 [node name="Sprite" type="AnimatedSprite2D" parent="."]
 position = Vector2(0, -1)

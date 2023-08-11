@@ -136,14 +136,12 @@ func move(direction, delta):
 
 func was_parried():
 	# play parried animation
-	print("was parried")
 	$TimerParryStun.start()
 	cancel_attack()
 	canMove = false
 	canAttack = false
 
 func _on_timer_parry_stun_timeout():
-	print("parry timed out")
 	canMove = true
 	canAttack = true
 	isGettingKnockedBack = false

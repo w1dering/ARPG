@@ -126,10 +126,10 @@ func _process(delta):
 				$TimerGuardCD.wait_time = $TimerAttackHitscan.wait_time + $TimerAttackPostAnimation.wait_time
 				cancel_guard()
 	# second statement allows basically buffering a guard
-	if (Input.is_action_just_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
+	if (Input.is_action_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
 		start_guard()
 		cancel_attack()
-	if Input.is_action_just_released("key_space"):
+	if !Input.is_action_pressed("key_space") and isGuarding:
 		cancel_guard()
 	if Input.is_action_just_pressed("RMB") and canDash:
 		start_dash(inputDir)
@@ -152,7 +152,7 @@ func _process(delta):
 		move(currentDashDir, dashSpeed * $TimerDash.time_left / $TimerDash.wait_time, delta)
 		currentSpeed = maxSpeed
 	
-	if canMove and !isGuarding:
+	if canMove and !isGuarding and !isDashing:
 		if currentSpeed < maxSpeed and inputDir.length() != 0:
 			currentSpeed += acceleration * delta
 			if currentSpeed > maxSpeed:
@@ -210,6 +210,7 @@ func cancel_dash():
 
 func start_guard():
 	if canGuard:
+		canGuard = false
 		isGuarding = true
 		canGuardPerfect = true
 		$TimerGuardPerfect.start()
