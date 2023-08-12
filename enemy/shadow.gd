@@ -37,11 +37,9 @@ func _ready():
 		if i.y > maxes.y:
 			maxes.y = i.y
 	
-	attackHitscanInstance.width = abs(maxes.x - mins.x)
-	attackHitscanInstance.height = abs(maxes.y - mins.y)
+	attackHitscanInstance.size = Vector2(abs(maxes.x - mins.x), abs(maxes.y - mins.y))
 	
-	width = $Hitbox.get_shape().get_rect().size.x
-	height = $Hitbox.get_shape().get_rect().size.y
+	size = $Hitbox.get_shape().get_rect().size
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):

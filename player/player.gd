@@ -11,8 +11,15 @@ var directionFacing: Vector2 = Vector2.RIGHT
 @export var dashSpeed: int = 5000
 @export var maxHP: int = 100
 var HP: int = 100
+
+# skills
 @export var damageOnAttack: int = 20
-@export var knockbackStrength: int = 10
+@export var knockbackAmountOnAttack: int = 10
+@export var hitStopTimeOnAttack: float = 0.1
+@export var screenShakeAmountOnAttack: int = 3 # duration of screen shake is equal to duration of hit stop
+
+@export var damageOnCleave: int = 40
+@export var knockbackAmountOnCleave: int = 20
 
 @export var spriteFrameRate: int = 60
 @export var timerDashBaseTime: float = 0.25
@@ -66,6 +73,10 @@ func _ready():
 	
 	attackHitscanInstance = load("res://player/player_attack_hitscan.tscn").instantiate()
 	attackHitscanInstance.z_index = 100
+	attackHitscanInstance.damage = damageOnAttack
+	attackHitscanInstance.knockbackAmount = knockbackAmountOnAttack
+	attackHitscanInstance.hitStopTime = hitStopTimeOnAttack
+	attackHitscanInstance.screenShakeAmount = screenShakeAmountOnAttack
 	
 	attackPostAnimationInstance = load("res://player/player_attack_post_animation.tscn").instantiate()
 	attackPostAnimationInstance.z_index = 100

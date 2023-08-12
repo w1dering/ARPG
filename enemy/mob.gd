@@ -15,8 +15,7 @@ var player
 var attackHitscanInstance
 var attackPostAnimationInstance
 
-var width
-var height
+var size
 
 # stats
 var damage # on contact
@@ -56,19 +55,19 @@ func reduce_hp(amount):
 	
 	make_invulnerable(0.32)
 
-func knockback(direction, magnitude):
+func knockback(direction, amount):
 	if !isGettingKnockedBack:
 		canMove = false
 		isGettingKnockedBack = true
-		knockbackVector = direction.normalized() * 2000 * magnitude / knockbackResistance
+		knockbackVector = direction.normalized() * 2000 * amount / knockbackResistance
 		$TimerKnockback.start()
 
 func _on_area_entered(area):
-	if player.attackHitscanInstance != null and area == player.attackHitscanInstance and !isInvulnerable:
-		hitStop.emit(0.1)
-		shakeScreen.emit(0.1, 3)
-		reduce_hp(player.damageOnAttack)
-		knockback(position - player.position, player.knockbackStrength)
+	if area != player and area != attackHitscanInstance and area != attackPostAnimationInstance and !isInvulnerable:
+		hitStop.emit(area.hitStopTime)
+		shakeScreen.emit(area.hitStopTime, area.screenShakeAmount)
+		reduce_hp(area.damage)
+		knockback(position - player.position, area.knockbackAmount)
 		isAttacking = false
 		canAttack = false
 		canMove = false
