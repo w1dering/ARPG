@@ -18,18 +18,42 @@ var HP: int = 100
 @export var hitStopTimeOnAttack: float = 0.1
 @export var screenShakeAmountOnAttack: int = 3 # duration of screen shake is equal to duration of hit stop
 
+var isAttacking: bool = false
+var canAttack: bool = true
+
 @export var damageOnCleave: int = 40
 @export var knockbackAmountOnCleave: int = 20
 
+var isCleaving: bool = false
+var canCleave: bool = true
+
 @export var spriteFrameRate: int = 60
+
+@onready var timerDash = $TimerHolder/TimerDash
 @export var timerDashBaseTime: float = 0.25
+
+@onready var timerDashPerfect = $TimerHolder/TimerDashPerfect
 @export var timerDashPerfectBaseTime: float = 0.1
+
+@onready var timerDashCD = $TimerHolder/TimerDashCD
 @export var timerDashCDBaseTime: float = 0.2
+
+@onready var timerGuardPerfect = $TimerHolder/TimerGuardPerfect
 @export var timerGuardPerfectBaseTime: float = 0.1
+
+@onready var timerGuardCD = $TimerHolder/TimerGuardCD
 @export var timerGuardCDBaseTime: float = 0.5
+
+@onready var timerAttackHitscan = $TimerHolder/TimerAttackHitscan
 @export var timerAttackHitscanBaseTime: float = 0.05
+
+@onready var timerAttackPostAnimation = $TimerHolder/TimerAttackPostAnimation
 @export var timerAttackPostAnimationBaseTime: float = 0.15
+
+@onready var timerAttackCD = $TimerHolder/TimerAttackCD
 @export var timerAttackCDBaseTime: float = 0.133
+
+@onready var timerInvulnerability = $TimerHolder/TimerInvulnerability
 
 var attackHitscanInstance: Node2D
 var attackPostAnimationInstance: Node2D
@@ -55,19 +79,17 @@ var isGuarding: bool = false
 var canGuard: bool = true
 var canGuardPerfect: bool = false
 
-var isAttacking: bool = false
-var canAttack: bool = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	$TimerDash.wait_time = timerDashBaseTime
-	$TimerDashPerfect.wait_time = timerDashPerfectBaseTime
-	$TimerDashCD.wait_time = timerDashCDBaseTime
-	$TimerGuardPerfect.wait_time = timerGuardPerfectBaseTime
-	$TimerGuardCD.wait_time = timerGuardCDBaseTime
-	$TimerAttackHitscan.wait_time = timerAttackHitscanBaseTime
-	$TimerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
-	$TimerAttackCD.wait_time = timerAttackCDBaseTime
+	timerDash.wait_time = timerDashBaseTime
+	timerDashPerfect.wait_time = timerDashPerfectBaseTime
+	timerDashCD.wait_time = timerDashCDBaseTime
+	timerGuardPerfect.wait_time = timerGuardPerfectBaseTime
+	timerGuardCD.wait_time = timerGuardCDBaseTime
+	timerAttackHitscan.wait_time = timerAttackHitscanBaseTime
+	timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
+	timerAttackCD.wait_time = timerAttackCDBaseTime
 	
 	position = Vector2(800, 800)
 	
@@ -87,14 +109,14 @@ func _process(delta):
 	if isInSlowMo:
 		isInvulnerable = true
 		# ensures player movement will always be constant during slow mo
-		$TimerDash.wait_time = timerDashBaseTime * Engine.time_scale
-		$TimerDashPerfect.wait_time = timerDashPerfectBaseTime * Engine.time_scale
-		$TimerDashCD.wait_time = timerDashCDBaseTime * Engine.time_scale
-		$TimerGuardPerfect.wait_time = timerGuardPerfectBaseTime * Engine.time_scale
-		$TimerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
-		$TimerAttackHitscan.wait_time = timerAttackHitscanBaseTime * Engine.time_scale
-		$TimerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime * Engine.time_scale
-		$TimerAttackCD.wait_time = timerAttackCDBaseTime * Engine.time_scale
+		timerDash.wait_time = timerDashBaseTime * Engine.time_scale
+		timerDashPerfect.wait_time = timerDashPerfectBaseTime * Engine.time_scale
+		timerDashCD.wait_time = timerDashCDBaseTime * Engine.time_scale
+		timerGuardPerfect.wait_time = timerGuardPerfectBaseTime * Engine.time_scale
+		timerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
+		timerAttackHitscan.wait_time = timerAttackHitscanBaseTime * Engine.time_scale
+		timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime * Engine.time_scale
+		timerAttackCD.wait_time = timerAttackCDBaseTime * Engine.time_scale
 		delta /= Engine.time_scale
 		slowMoTimer += delta
 		if slowMoTimer >= 1:
@@ -134,7 +156,7 @@ func _process(delta):
 			
 			# if a guard is attack-cancelled, the cooldown of the guard will shorten afterwards
 			if isGuarding:
-				$TimerGuardCD.wait_time = $TimerAttackHitscan.wait_time + $TimerAttackPostAnimation.wait_time
+				timerGuardCD.wait_time = timerAttackHitscan.wait_time + timerAttackPostAnimation.wait_time
 				cancel_guard()
 	# second statement allows basically buffering a guard
 	if (Input.is_action_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
@@ -150,9 +172,9 @@ func _process(delta):
 		
 		# dash-cancelling a guard
 		if isGuarding:
-			$TimerGuardCD.wait_time = $TimerDash.wait_time
+			timerGuardCD.wait_time = timerDash.wait_time
 			cancel_guard()
-	if $TimerDash.get_time_left() > 0 and isDashing:
+	if timerDash.get_time_left() > 0 and isDashing:
 		if inputDir != Vector2.ZERO and abs(currentDashDir.angle_to(inputDir)) <= PI / 2 + 0.2:
 			# +0.2 is there for insurance bc angles that are exactly PI/2 might get rounded down 
 			currentDashDir = inputDir
@@ -160,7 +182,7 @@ func _process(delta):
 		# base maxSpeed of walking
 		move(currentDashDir, maxSpeed, delta)
 		# added boost due to dash
-		move(currentDashDir, dashSpeed * $TimerDash.time_left / $TimerDash.wait_time, delta)
+		move(currentDashDir, dashSpeed * timerDash.time_left / timerDash.wait_time, delta)
 		currentSpeed = maxSpeed
 	
 	if canMove and !isGuarding and !isDashing:
@@ -176,7 +198,7 @@ func _process(delta):
 
 func start_attack():
 	if canAttack:
-		$TimerAttackHitscan.start()
+		timerAttackHitscan.start()
 		isAttacking = true
 		canAttack = false
 		
@@ -190,14 +212,14 @@ func start_attack():
 func cancel_attack():
 	if isAttacking:
 		isAttacking = false
-		if $TimerAttackHitscan.time_left > 0:
+		if timerAttackHitscan.time_left > 0:
 			remove_child(attackHitscanInstance)
-			$TimerAttackHitscan.stop()
-		if $TimerAttackPostAnimation.time_left > 0:
+			timerAttackHitscan.stop()
+		if timerAttackPostAnimation.time_left > 0:
 			remove_child(attackPostAnimationInstance)
-			$TimerAttackPostAnimation.stop()
-		$TimerAttackCD.stop()
-		$TimerAttackCD.start()
+			timerAttackPostAnimation.stop()
+		timerAttackCD.stop()
+		timerAttackCD.start()
 
 func start_dash(inputDir):
 	if canDash:
@@ -205,8 +227,8 @@ func start_dash(inputDir):
 		isDashing = true
 		canDash = false
 		canDashPerfect = true
-		$TimerDash.start()
-		$TimerDashPerfect.start()
+		timerDash.start()
+		timerDashPerfect.start()
 		currentDashDir = -directionFacing if inputDir == Vector2.ZERO else inputDir
 
 func cancel_dash():
@@ -214,9 +236,9 @@ func cancel_dash():
 		isDashing = false
 		canDashPerfect = false
 		canDash = false
-		$TimerDash.stop()
-		$TimerDashPerfect.stop()
-		$TimerDashCD.start()
+		timerDash.stop()
+		timerDashPerfect.stop()
+		timerDashCD.start()
 		currentDashDir = Vector2.ZERO
 
 func start_guard():
@@ -224,7 +246,7 @@ func start_guard():
 		canGuard = false
 		isGuarding = true
 		canGuardPerfect = true
-		$TimerGuardPerfect.start()
+		timerGuardPerfect.start()
 		canMove = false
 		currentSpeed = 0
 
@@ -233,12 +255,12 @@ func cancel_guard():
 		canGuard = false
 		isGuarding = false
 		canGuardPerfect = false
-		$TimerGuardPerfect.stop()
-		$TimerGuardCD.start()
+		timerGuardPerfect.stop()
+		timerGuardCD.start()
 		canMove = true
 
 func _on_timer_dash_timeout():
-	$TimerDashCD.start()
+	timerDashCD.start()
 	isDashing = false
 	canAttack = true
 
@@ -248,7 +270,7 @@ func _on_timer_dash_cd_timeout():
 
 
 func _on_timer_attack_hitscan_timeout():
-	$TimerAttackPostAnimation.start()
+	timerAttackPostAnimation.start()
 	attackPostAnimationInstance.position = attackHitscanInstance.position
 	attackPostAnimationInstance.rotation = attackHitscanInstance.rotation
 	attackPostAnimationInstance.show()
@@ -257,7 +279,7 @@ func _on_timer_attack_hitscan_timeout():
 	remove_child(attackHitscanInstance)
 	
 func _on_timer_attack_post_animation_timeout():
-	$TimerAttackCD.start()
+	timerAttackCD.start()
 	remove_child(attackPostAnimationInstance)
 	isAttacking = false
 
@@ -275,11 +297,11 @@ func _on_area_entered(area):
 				Engine.time_scale = 0.25
 				isInSlowMo = true
 				isInvulnerable = true
-				var temp = $TimerDash.time_left
-				$TimerDash.stop()
-				$TimerDash.wait_time = temp / 4
-				$TimerDash.start()
-				$TimerDash.wait_time = timerDashBaseTime / 4
+				var temp = timerDash.time_left
+				timerDash.stop()
+				timerDash.wait_time = temp / 4
+				timerDash.start()
+				timerDash.wait_time = timerDashBaseTime / 4
 		elif canGuardPerfect:
 			print("parried")
 			area.was_parried()
@@ -305,15 +327,15 @@ func move(direction, speed, delta):
 
 func _on_timer_dash_perfect_timeout():
 	canDashPerfect = false
-	if $TimerDash.time_left > 0:
-		make_invulnerable($TimerDash.time_left)
+	if timerDash.time_left > 0:
+		make_invulnerable(timerDash.time_left)
 
 func _on_timer_guard_perfect_timeout():
 	canGuardPerfect = false
 
 func make_invulnerable(time):
-	$TimerInvulnerability.wait_time = time
-	$TimerInvulnerability.start()
+	timerInvulnerability.wait_time = time
+	timerInvulnerability.start()
 	isInvulnerable = true
 
 func _on_timer_invulnerability_timeout():
@@ -321,5 +343,5 @@ func _on_timer_invulnerability_timeout():
 
 func _on_timer_guard_cd_timeout():
 	canGuard = true
-	if $TimerGuardCD.wait_time != timerGuardCDBaseTime * Engine.time_scale:
-		$TimerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
+	if timerGuardCD.wait_time != timerGuardCDBaseTime * Engine.time_scale:
+		timerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale

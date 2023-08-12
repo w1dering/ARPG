@@ -1,5 +1,6 @@
 extends "res://enemy/mob.gd"
 
+@onready var timerDash = $TimerHolder/TimerDash
 var canDash = true
 var isDashing = false
 var dashingDir = Vector2.ZERO
@@ -52,7 +53,7 @@ func _process(delta):
 	if isGettingKnockedBack:
 		position += knockbackVector * delta
 	elif isDashing:
-		position += dashingDir * $TimerDash.get_time_left() * dashSpeed * delta
+		position += dashingDir * timerDash.get_time_left() * dashSpeed * delta
 	elif canMove:
 		var pathToPlayer = player.position - position
 		if pathToPlayer.length() <= 170:
@@ -63,8 +64,8 @@ func _process(delta):
 					canDash = false
 					isDashing = true
 					dashingDir = -pathToPlayer.normalized()
-					$TimerDash.start()
-					make_invulnerable($TimerDash.wait_time)
+					timerDash.start()
+					make_invulnerable(timerDash.wait_time)
 				else:
 					move(-pathToPlayer, delta)
 		else:

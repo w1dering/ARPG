@@ -6,36 +6,38 @@ extends Node2D
 var levelTopLeft: Vector2
 var levelSize: Vector2
 
+@onready var player = $Player
+
 func _ready():
 	levelTopLeft = $TextureRect.position
 	levelSize = $TextureRect.size
-	$HUD.player = $Player
+	$HUD.player = player
 	
-	$Player.connect("playerHPChanged", player_HP_change)
-	$Player.connect("hitStop", hit_stop)
-	$Player.connect("shakeScreen", shake_screen)
+	player.connect("playerHPChanged", player_HP_change)
+	player.connect("hitStop", hit_stop)
+	player.connect("shakeScreen", shake_screen)
 
-	$Player.boundsTopLeft = levelTopLeft
-	$Player.boundsSize = levelSize
-	$Player/CameraTarget.remote_path = "/root/Main/PlayerCamera"
+	player.boundsTopLeft = levelTopLeft
+	player.boundsSize = levelSize
+	player.get_node("CameraTarget").remote_path = "/root/Main/PlayerCamera"
 	
 	
 	$HUD.change_player_health_bar(100)
 
 func _process(delta):
-	if $Player.isInSlowMo:
-		if $Player.slowMoTimer < 0.10:
-			$PlayerCamera.zoom = Vector2(1 + $Player.slowMoTimer * 2.5, 1 + $Player.slowMoTimer * 2.5)
-		elif $Player.slowMoTimer < 1:
+	if player.isInSlowMo:
+		if player.slowMoTimer < 0.10:
+			$PlayerCamera.zoom = Vector2(1 + player.slowMoTimer * 2.5, 1 + player.slowMoTimer * 2.5)
+		elif player.slowMoTimer < 1:
 			$PlayerCamera.zoom = Vector2(1.25, 1.25)
 		else:
-			$PlayerCamera.zoom = Vector2(1.25 - ($Player.slowMoTimer - 1) / 4, 1.25 - ($Player.slowMoTimer - 1) / 4)
+			$PlayerCamera.zoom = Vector2(1.25 - (player.slowMoTimer - 1) / 4, 1.25 - (player.slowMoTimer - 1) / 4)
 
 func _on_timer_mob_spawn_timeout():
 	var shadow = mobScene.instantiate().spawn_mob("shadow")
 	shadow.position.x = 1200
 	shadow.position.y = 450
-	shadow.player = $Player
+	shadow.player = player
 	shadow.connect("hitStop", hit_stop)
 	shadow.connect("shakeScreen", shake_screen)
 	$ShadowSpawner.add_child(shadow)

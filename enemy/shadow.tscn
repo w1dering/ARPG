@@ -9,8 +9,8 @@ script = ExtResource("2_6xtd5")
 [node name="Hitbox" parent="." index="1"]
 position = Vector2(0, 1)
 
-[node name="TimerDash" type="Timer" parent="." index="7"]
+[node name="TimerDash" type="Timer" parent="TimerHolder" index="6"]
 wait_time = 0.25
 one_shot = true
 
-[connection signal="timeout" from="TimerDash" to="." method="_on_timer_dash_timeout"]
+[connection signal="timeout" from="TimerHolder/TimerDash" to="." method="_on_timer_dash_timeout"]
