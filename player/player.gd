@@ -3,6 +3,7 @@ extends Area2D
 signal playerHPChanged
 signal hitStop
 signal shakeScreen
+signal cameraPosition
 
 @export var maxSpeed: int = 500
 @export var acceleration: int = 4000
@@ -11,6 +12,8 @@ var directionFacing: Vector2 = Vector2.RIGHT
 @export var dashSpeed: int = 5000
 @export var maxHP: int = 100
 var HP: int = 100
+
+@export var timerCameraOffset = 0.0
 
 # skills
 @export var damageOnAttack: int = 20
@@ -107,7 +110,15 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if isInSlowMo:
-		isInvulnerable = true
+		if slowMoTimer >= 2:
+			isInSlowMo = false
+			isInvulnerable = false
+			slowMoTimer = 0
+			Engine.time_scale = 1
+		else:
+			isInvulnerable = true
+			delta /= Engine.time_scale
+			slowMoTimer += delta
 		# ensures player movement will always be constant during slow mo
 		timerDash.wait_time = timerDashBaseTime * Engine.time_scale
 		timerDashPerfect.wait_time = timerDashPerfectBaseTime * Engine.time_scale
@@ -117,15 +128,6 @@ func _process(delta):
 		timerAttackHitscan.wait_time = timerAttackHitscanBaseTime * Engine.time_scale
 		timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime * Engine.time_scale
 		timerAttackCD.wait_time = timerAttackCDBaseTime * Engine.time_scale
-		delta /= Engine.time_scale
-		slowMoTimer += delta
-		if slowMoTimer >= 1:
-			Engine.time_scale = (slowMoTimer - 1) * 3 / 4 + 0.25
-		if slowMoTimer >= 2:
-			isInSlowMo = false
-			isInvulnerable = false
-			slowMoTimer = 0
-			Engine.time_scale = 1
 	
 	var inputDir = Vector2.ZERO
 	
@@ -142,7 +144,9 @@ func _process(delta):
 	if inputDir.length() > 1:
 		inputDir = inputDir.normalized()
 	
-	if inputDir.length() > 0 and !isDashing:
+	if inputDir.length() > 0:
+		if !isDashing and abs(directionFacing.angle_to(inputDir)) > PI / 2 + 0.1:
+			currentSpeed = 0
 		directionFacing = inputDir
 	
 	if inputDir.length() == 0 and currentSpeed > 0:
@@ -195,6 +199,8 @@ func _process(delta):
 	
 	position.x = clamp(position.x, boundsTopLeft.x + size.x / 2, boundsTopLeft.x + boundsSize.x - size.x / 2)
 	position.y = clamp(position.y, boundsTopLeft.y + size.y / 2, boundsTopLeft.y + boundsSize.y - size.y / 2)
+	
+	send_camera_position(position)
 
 func start_attack():
 	if canAttack:
@@ -345,3 +351,8 @@ func _on_timer_guard_cd_timeout():
 	canGuard = true
 	if timerGuardCD.wait_time != timerGuardCDBaseTime * Engine.time_scale:
 		timerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
+
+func send_camera_position(pos):
+	#for i in range(100):
+	#	await get_tree().create_timer(timerCameraOffset * Engine.time_scale / 100).timeout
+	cameraPosition.emit(pos)

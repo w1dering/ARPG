@@ -36,6 +36,9 @@ limit_bottom = 1328
 [node name="HitStop" type="Timer" parent="."]
 process_mode = 2
 
+[node name="CameraTarget" type="RemoteTransform2D" parent="."]
+remote_path = NodePath("../PlayerCamera")
+
 [connection signal="timeout" from="TimerMobSpawn" to="." method="_on_timer_mob_spawn_timeout"]
 [connection signal="timeout" from="HitStop" to="." method="_on_hit_stop_timeout"]
 

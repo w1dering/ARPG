@@ -16,10 +16,10 @@ func _ready():
 	player.connect("playerHPChanged", player_HP_change)
 	player.connect("hitStop", hit_stop)
 	player.connect("shakeScreen", shake_screen)
+	player.connect("cameraPosition", update_camera_position)
 
 	player.boundsTopLeft = levelTopLeft
 	player.boundsSize = levelSize
-	player.get_node("CameraTarget").remote_path = "/root/Main/PlayerCamera"
 	
 	
 	$HUD.change_player_health_bar(100)
@@ -55,3 +55,6 @@ func _on_hit_stop_timeout():
 
 func shake_screen(time, amount):
 	$PlayerCamera.shake(time, amount)
+
+func update_camera_position(pos):
+	$CameraTarget.position = pos
