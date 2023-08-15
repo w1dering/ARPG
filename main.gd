@@ -26,12 +26,14 @@ func _ready():
 
 func _process(delta):
 	if player.isInSlowMo:
-		if player.slowMoTimer < 0.10:
-			$PlayerCamera.zoom = Vector2(1 + player.slowMoTimer * 2.5, 1 + player.slowMoTimer * 2.5)
-		elif player.slowMoTimer < 1:
+		if player.timerSlowMo.wait_time - player.timerSlowMo.time_left < 0.1:
+			$PlayerCamera.zoom = Vector2(1 + (player.timerSlowMo.wait_time - player.timerSlowMo.time_left) * 2.5, 1 + (player.timerSlowMo.wait_time - player.timerSlowMo.time_left) * 2.5)
+		elif player.timerSlowMo.time_left > 1:
 			$PlayerCamera.zoom = Vector2(1.25, 1.25)
 		else:
-			$PlayerCamera.zoom = Vector2(1.25 - (player.slowMoTimer - 1) / 4, 1.25 - (player.slowMoTimer - 1) / 4)
+			$PlayerCamera.zoom = Vector2(1.25 - (1 - player.timerSlowMo.time_left) / 4, 1.25 - (1 - player.timerSlowMo.time_left) / 4)
+	elif $PlayerCamera.zoom != Vector2(1, 1):
+		$PlayerCamera.zoom = Vector2(1, 1)
 
 func _on_timer_mob_spawn_timeout():
 	var shadow = mobScene.instantiate().spawn_mob("shadow")
@@ -46,7 +48,7 @@ func player_HP_change(amount):
 	$HUD.change_player_health_bar(amount)
 
 func hit_stop(time):
-	$HitStop.wait_time = time * Engine.time_scale
+	$HitStop.wait_time = time
 	$HitStop.start()
 	get_tree().paused = true
 

@@ -1,13 +1,15 @@
 extends "res://enemy/mob.gd"
 
 @onready var timerDash = $TimerHolder/TimerDash
+@export var timerDashBaseTime = 0.25
+
 var canDash = true
 var isDashing = false
 var dashingDir = Vector2.ZERO
-var dashSpeed = 5000
+var dashSpeed = 1000
 
 # Called when the node enters the scene tree for the first time.
-func _ready():
+func extra_ready():
 	hp = 100
 	speed = 200
 	damage = 10
@@ -16,13 +18,6 @@ func _ready():
 	
 	attackHitscanInstance = load("res://enemy/shadow_hitscan_attack.tscn").instantiate()
 	attackPostAnimationInstance = load("res://enemy/shadow_attack_post_animation.tscn").instantiate()
-	
-	attackHitscanInstance.z_index = 100
-	attackPostAnimationInstance.z_index = 100
-	
-	attackHitscanInstance.connect("wasParried", was_parried)
-	
-	attackHitscanInstance.damage = damageOnAttack
 	
 	var arr = attackHitscanInstance.get_node("Hitbox").get_polygon()
 	var maxes = Vector2(-1, -1)
@@ -38,6 +33,13 @@ func _ready():
 		if i.y > maxes.y:
 			maxes.y = i.y
 	
+	attackHitscanInstance.damage = damageOnAttack
+	
+	attackHitscanInstance.z_index = 100
+	attackPostAnimationInstance.z_index = 100
+	
+	attackHitscanInstance.connect("wasParried", was_parried)
+	
 	attackHitscanInstance.size = Vector2(abs(maxes.x - mins.x), abs(maxes.y - mins.y))
 	
 	size = $Hitbox.get_shape().get_rect().size
@@ -45,7 +47,14 @@ func _ready():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
 	if player.isInSlowMo:
-		isInvulnerable = false
+		var time_scale = player.get_time_scale()
+		timerAttackHitscan.wait_time = timerAttackHitscanBaseTime / time_scale
+		timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime / time_scale
+		timerAttackCD.wait_time = timerAttackCDBaseTime / time_scale
+		# invulnerability timer stays the same, even tho technically they're always invulnerable
+		timerParryStun.wait_time = timerParryStunBaseTime / time_scale
+		timerDash.wait_time = timerDashBaseTime / time_scale
+		delta *= time_scale
 	
 	if isGettingKnockedBack or isAttacking:
 		canMove = false
@@ -53,7 +62,7 @@ func _process(delta):
 	if isGettingKnockedBack:
 		position += knockbackVector * delta
 	elif isDashing:
-		position += dashingDir * timerDash.get_time_left() * dashSpeed * delta
+		position += dashingDir * (timerDash.time_left / timerDash.wait_time) * dashSpeed * delta
 	elif canMove:
 		var pathToPlayer = player.position - position
 		if pathToPlayer.length() <= 170:
@@ -74,6 +83,10 @@ func _process(delta):
 			else:
 				# incorporate side to side movement
 				pass
+		
+		if player.isInSlowMo:
+			isInvulnerable = false
+			# overrides any other changes to isInvulnerable
 
 func _on_timer_dash_timeout():
 	isDashing = false

@@ -13,7 +13,7 @@ var directionFacing: Vector2 = Vector2.RIGHT
 @export var maxHP: int = 100
 var HP: int = 100
 
-@export var timerCameraOffset = 0.0
+@export var timerCameraOffset = 0.05
 
 # skills
 @export var damageOnAttack: int = 20
@@ -31,32 +31,17 @@ var isCleaving: bool = false
 var canCleave: bool = true
 
 @export var spriteFrameRate: int = 60
-
 @onready var timerDash = $TimerHolder/TimerDash
-@export var timerDashBaseTime: float = 0.25
-
 @onready var timerDashPerfect = $TimerHolder/TimerDashPerfect
-@export var timerDashPerfectBaseTime: float = 0.1
-
 @onready var timerDashCD = $TimerHolder/TimerDashCD
-@export var timerDashCDBaseTime: float = 0.2
-
 @onready var timerGuardPerfect = $TimerHolder/TimerGuardPerfect
-@export var timerGuardPerfectBaseTime: float = 0.1
-
 @onready var timerGuardCD = $TimerHolder/TimerGuardCD
-@export var timerGuardCDBaseTime: float = 0.5
-
+@export var timerGuardCDBaseTime = 0.5
 @onready var timerAttackHitscan = $TimerHolder/TimerAttackHitscan
-@export var timerAttackHitscanBaseTime: float = 0.05
-
 @onready var timerAttackPostAnimation = $TimerHolder/TimerAttackPostAnimation
-@export var timerAttackPostAnimationBaseTime: float = 0.15
-
 @onready var timerAttackCD = $TimerHolder/TimerAttackCD
-@export var timerAttackCDBaseTime: float = 0.133
-
 @onready var timerInvulnerability = $TimerHolder/TimerInvulnerability
+@onready var timerSlowMo = $TimerHolder/TimerSlowMo
 
 var attackHitscanInstance: Node2D
 var attackPostAnimationInstance: Node2D
@@ -75,8 +60,9 @@ var isDashing: bool = false
 var canDash: bool = true
 var canDashPerfect: bool = false
 var currentDashDir: Vector2 = Vector2.ZERO
+
 var isInSlowMo: bool = false
-var slowMoTimer: float
+@export var slowMoMultiplier: float = 0.25
 
 var isGuarding: bool = false
 var canGuard: bool = true
@@ -85,14 +71,6 @@ var canGuardPerfect: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	timerDash.wait_time = timerDashBaseTime
-	timerDashPerfect.wait_time = timerDashPerfectBaseTime
-	timerDashCD.wait_time = timerDashCDBaseTime
-	timerGuardPerfect.wait_time = timerGuardPerfectBaseTime
-	timerGuardCD.wait_time = timerGuardCDBaseTime
-	timerAttackHitscan.wait_time = timerAttackHitscanBaseTime
-	timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
-	timerAttackCD.wait_time = timerAttackCDBaseTime
 	
 	position = Vector2(800, 800)
 	
@@ -109,26 +87,6 @@ func _ready():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	if isInSlowMo:
-		if slowMoTimer >= 2:
-			isInSlowMo = false
-			isInvulnerable = false
-			slowMoTimer = 0
-			Engine.time_scale = 1
-		else:
-			isInvulnerable = true
-			delta /= Engine.time_scale
-			slowMoTimer += delta
-		# ensures player movement will always be constant during slow mo
-		timerDash.wait_time = timerDashBaseTime * Engine.time_scale
-		timerDashPerfect.wait_time = timerDashPerfectBaseTime * Engine.time_scale
-		timerDashCD.wait_time = timerDashCDBaseTime * Engine.time_scale
-		timerGuardPerfect.wait_time = timerGuardPerfectBaseTime * Engine.time_scale
-		timerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
-		timerAttackHitscan.wait_time = timerAttackHitscanBaseTime * Engine.time_scale
-		timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime * Engine.time_scale
-		timerAttackCD.wait_time = timerAttackCDBaseTime * Engine.time_scale
-	
 	var inputDir = Vector2.ZERO
 	
 	# WASD movement
@@ -166,7 +124,7 @@ func _process(delta):
 	if (Input.is_action_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
 		start_guard()
 		cancel_attack()
-	if !Input.is_action_pressed("key_space") and isGuarding:
+	if isGuarding and !Input.is_action_pressed("key_space"):
 		cancel_guard()
 	if Input.is_action_just_pressed("RMB") and canDash:
 		start_dash(inputDir)
@@ -201,6 +159,8 @@ func _process(delta):
 	position.y = clamp(position.y, boundsTopLeft.y + size.y / 2, boundsTopLeft.y + boundsSize.y - size.y / 2)
 	
 	send_camera_position(position)
+	if isInSlowMo:
+		isInvulnerable = true
 
 func start_attack():
 	if canAttack:
@@ -300,14 +260,9 @@ func _on_area_entered(area):
 		if canDashPerfect and !isInSlowMo:
 			if !area.has_method("_on_area_entered"):
 				print("perfect dash")
-				Engine.time_scale = 0.25
 				isInSlowMo = true
 				isInvulnerable = true
-				var temp = timerDash.time_left
-				timerDash.stop()
-				timerDash.wait_time = temp / 4
-				timerDash.start()
-				timerDash.wait_time = timerDashBaseTime / 4
+				timerSlowMo.start()
 		elif canGuardPerfect:
 			print("parried")
 			area.was_parried()
@@ -349,10 +304,24 @@ func _on_timer_invulnerability_timeout():
 
 func _on_timer_guard_cd_timeout():
 	canGuard = true
-	if timerGuardCD.wait_time != timerGuardCDBaseTime * Engine.time_scale:
-		timerGuardCD.wait_time = timerGuardCDBaseTime * Engine.time_scale
+	if timerGuardCD.wait_time != timerGuardCDBaseTime:
+		timerGuardCD.wait_time = timerGuardCDBaseTime
 
 func send_camera_position(pos):
-	#for i in range(100):
-	#	await get_tree().create_timer(timerCameraOffset * Engine.time_scale / 100).timeout
+	await get_tree().create_timer(timerCameraOffset).timeout
 	cameraPosition.emit(pos)
+
+func get_time_scale() -> float:
+	var t = timerSlowMo.time_left
+	if t == 0:
+		return 1.0
+	if timerSlowMo.wait_time - t <= 0.1:
+		return 1.0 - (timerSlowMo.wait_time - t) * 7.5
+	if t <= 1:
+		return 0.25 + 0.75 * (1 - t)
+	else:
+		return slowMoMultiplier
+
+func _on_timer_slow_mo_timeout():
+	isInSlowMo = false
+	isInvulnerable = false

@@ -25,11 +25,22 @@ var speed
 var knockbackResistance
 
 @onready var timerAttackHitscan = $TimerHolder/TimerAttackHitscan
+@export var timerAttackHitscanBaseTime = 0.05
+
 @onready var timerAttackPostAnimation = $TimerHolder/TimerAttackPostAnimation
+@export var timerAttackPostAnimationBaseTime = 0.15
+
 @onready var timerAttackCD = $TimerHolder/TimerAttackCD
+@export var timerAttackCDBaseTime = 1.0
+
 @onready var timerInvulnerability = $TimerHolder/TimerInvulnerability
+@export var timerInvulnerabilityBaseTime = 0.32
+
 @onready var timerKnockback = $TimerHolder/TimerKnockback
+@export var timerKnockbackBaseTime = 0.075
+
 @onready var timerParryStun = $TimerHolder/TimerParryStun
+@export var timerParryStunBaseTime = 2.0
 
 # conditions
 var canMove = true
@@ -44,11 +55,21 @@ var isInvulnerable = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	# PUT ALL FUNCTIONS INTO THE ONE SPECIFIC TO THE MOB, NOT THIS ONE; ELSE IT WILL GET OVERRIDDEN
+	timerAttackHitscan.wait_time = timerAttackHitscanBaseTime
+	timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
+	timerAttackCD.wait_time = timerAttackCDBaseTime
+	timerInvulnerability.wait_time = timerInvulnerabilityBaseTime
+	timerKnockback.wait_time = timerKnockbackBaseTime
+	timerParryStun.wait_time = timerParryStunBaseTime
+	
+	extra_ready()
+
+func extra_ready():
 	pass
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
+	# PUT ALL FUNCTIONS INTO THE ONE SPECIFIC TO THE MOB, NOT THIS ONE; ELSE IT WILL GET OVERRIDDEN
 	pass
 
 func spawn_mob(type):

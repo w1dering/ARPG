@@ -53,6 +53,7 @@ wait_time = 0.075
 one_shot = true
 
 [node name="TimerParryStun" type="Timer" parent="TimerHolder"]
+wait_time = 2.0
 one_shot = true
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
