@@ -23,6 +23,8 @@ func _ready():
 	
 	
 	$HUD.change_player_health_bar(100)
+	
+	$CameraTarget.position = player.position
 
 func _process(delta):
 	if player.isInSlowMo:

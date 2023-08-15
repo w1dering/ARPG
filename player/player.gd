@@ -27,7 +27,7 @@ var canAttack: bool = true
 @export var damageOnCleave: int = 40
 @export var knockbackAmountOnCleave: int = 20
 
-var isCleaving: bool = false
+var isUsingCleave: bool = false
 var canCleave: bool = true
 
 @export var spriteFrameRate: int = 60
@@ -38,13 +38,13 @@ var canCleave: bool = true
 @onready var timerGuardCD = $TimerHolder/TimerGuardCD
 @export var timerGuardCDBaseTime = 0.5
 @onready var timerAttackHitscan = $TimerHolder/TimerAttackHitscan
-@onready var timerAttackPostAnimation = $TimerHolder/TimerAttackPostAnimation
+@onready var timerAttackLinger = $TimerHolder/TimerAttackLinger
 @onready var timerAttackCD = $TimerHolder/TimerAttackCD
 @onready var timerInvulnerability = $TimerHolder/TimerInvulnerability
 @onready var timerSlowMo = $TimerHolder/TimerSlowMo
 
 var attackHitscanInstance: Node2D
-var attackPostAnimationInstance: Node2D
+var attackLingerInstance: Node2D
 
 var size: Vector2
 
@@ -81,8 +81,8 @@ func _ready():
 	attackHitscanInstance.hitStopTime = hitStopTimeOnAttack
 	attackHitscanInstance.screenShakeAmount = screenShakeAmountOnAttack
 	
-	attackPostAnimationInstance = load("res://player/player_attack_post_animation.tscn").instantiate()
-	attackPostAnimationInstance.z_index = 100
+	attackLingerInstance = load("res://player/player_attack_linger.tscn").instantiate()
+	attackLingerInstance.z_index = 100
 	size = $Hitbox.get_shape().get_rect().size
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -118,7 +118,7 @@ func _process(delta):
 			
 			# if a guard is attack-cancelled, the cooldown of the guard will shorten afterwards
 			if isGuarding:
-				timerGuardCD.wait_time = timerAttackHitscan.wait_time + timerAttackPostAnimation.wait_time
+				timerGuardCD.wait_time = timerAttackHitscan.wait_time + timerAttackLinger.wait_time
 				cancel_guard()
 	# second statement allows basically buffering a guard
 	if (Input.is_action_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
@@ -181,9 +181,9 @@ func cancel_attack():
 		if timerAttackHitscan.time_left > 0:
 			remove_child(attackHitscanInstance)
 			timerAttackHitscan.stop()
-		if timerAttackPostAnimation.time_left > 0:
-			remove_child(attackPostAnimationInstance)
-			timerAttackPostAnimation.stop()
+		if timerAttackLinger.time_left > 0:
+			remove_child(attackLingerInstance)
+			timerAttackLinger.stop()
 		timerAttackCD.stop()
 		timerAttackCD.start()
 
@@ -236,17 +236,17 @@ func _on_timer_dash_cd_timeout():
 
 
 func _on_timer_attack_hitscan_timeout():
-	timerAttackPostAnimation.start()
-	attackPostAnimationInstance.position = attackHitscanInstance.position
-	attackPostAnimationInstance.rotation = attackHitscanInstance.rotation
-	attackPostAnimationInstance.show()
-	add_child(attackPostAnimationInstance)
+	timerAttackLinger.start()
+	attackLingerInstance.position = attackHitscanInstance.position
+	attackLingerInstance.rotation = attackHitscanInstance.rotation
+	attackLingerInstance.show()
+	add_child(attackLingerInstance)
 	
 	remove_child(attackHitscanInstance)
 	
-func _on_timer_attack_post_animation_timeout():
+func _on_timer_attack_linger_timeout():
 	timerAttackCD.start()
-	remove_child(attackPostAnimationInstance)
+	remove_child(attackLingerInstance)
 	isAttacking = false
 
 func _on_timer_attack_cd_timeout():
@@ -325,3 +325,6 @@ func get_time_scale() -> float:
 func _on_timer_slow_mo_timeout():
 	isInSlowMo = false
 	isInvulnerable = false
+
+
+

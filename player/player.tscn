@@ -56,7 +56,7 @@ one_shot = true
 wait_time = 0.05
 one_shot = true
 
-[node name="TimerAttackPostAnimation" type="Timer" parent="TimerHolder"]
+[node name="TimerAttackLinger" type="Timer" parent="TimerHolder"]
 wait_time = 0.15
 one_shot = true
 
@@ -71,6 +71,10 @@ one_shot = true
 [node name="TimerSlowMo" type="Timer" parent="TimerHolder"]
 wait_time = 2.0
 
+[node name="TimerSkill0BuildUp" type="Timer" parent="TimerHolder"]
+
+[node name="TimerSkill0" type="Timer" parent="TimerHolder"]
+
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
 [connection signal="timeout" from="TimerHolder/TimerDash" to="." method="_on_timer_dash_timeout"]
 [connection signal="timeout" from="TimerHolder/TimerDashPerfect" to="." method="_on_timer_dash_perfect_timeout"]
@@ -78,7 +82,7 @@ wait_time = 2.0
 [connection signal="timeout" from="TimerHolder/TimerGuardPerfect" to="." method="_on_timer_guard_perfect_timeout"]
 [connection signal="timeout" from="TimerHolder/TimerGuardCD" to="." method="_on_timer_guard_cd_timeout"]
 [connection signal="timeout" from="TimerHolder/TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerAttackPostAnimation" to="." method="_on_timer_attack_post_animation_timeout"]
+[connection signal="timeout" from="TimerHolder/TimerAttackLinger" to="." method="_on_timer_attack_linger_timeout"]
 [connection signal="timeout" from="TimerHolder/TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
 [connection signal="timeout" from="TimerHolder/TimerInvulnerability" to="." method="_on_timer_invulnerability_timeout"]
 [connection signal="timeout" from="TimerHolder/TimerSlowMo" to="." method="_on_timer_slow_mo_timeout"]

@@ -13,7 +13,7 @@ var player
 # contains a node of the enemy type
 @export var enemyType: PackedScene
 var attackHitscanInstance
-var attackPostAnimationInstance
+var attackLingerInstance
 
 var size
 
@@ -27,8 +27,8 @@ var knockbackResistance
 @onready var timerAttackHitscan = $TimerHolder/TimerAttackHitscan
 @export var timerAttackHitscanBaseTime = 0.05
 
-@onready var timerAttackPostAnimation = $TimerHolder/TimerAttackPostAnimation
-@export var timerAttackPostAnimationBaseTime = 0.15
+@onready var timerAttackLinger = $TimerHolder/TimerAttackLinger
+@export var timerAttackLingerBaseTime = 0.15
 
 @onready var timerAttackCD = $TimerHolder/TimerAttackCD
 @export var timerAttackCDBaseTime = 1.0
@@ -56,7 +56,7 @@ var isInvulnerable = false
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	timerAttackHitscan.wait_time = timerAttackHitscanBaseTime
-	timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime
+	timerAttackLinger.wait_time = timerAttackLingerBaseTime
 	timerAttackCD.wait_time = timerAttackCDBaseTime
 	timerInvulnerability.wait_time = timerInvulnerabilityBaseTime
 	timerKnockback.wait_time = timerKnockbackBaseTime
@@ -89,12 +89,13 @@ func reduce_hp(amount):
 func knockback(direction, amount):
 	if !isGettingKnockedBack:
 		canMove = false
+		canAttack = false
 		isGettingKnockedBack = true
 		knockbackVector = direction.normalized() * 2000 * amount / knockbackResistance
 		timerKnockback.start()
 
 func _on_area_entered(area):
-	if area != player and area != attackHitscanInstance and area != attackPostAnimationInstance and !isInvulnerable:
+	if area != player and area != attackHitscanInstance and area != attackLingerInstance and !isInvulnerable:
 		hitStop.emit(area.hitStopTime)
 		shakeScreen.emit(area.hitStopTime, area.screenShakeAmount)
 		reduce_hp(area.damage)
@@ -116,9 +117,9 @@ func cancel_attack():
 		if timerAttackHitscan.time_left > 0:
 			remove_child(attackHitscanInstance)
 			timerAttackHitscan.stop()
-		if timerAttackPostAnimation.time_left > 0:
-			remove_child(attackPostAnimationInstance)
-			timerAttackPostAnimation.stop()
+		if timerAttackLinger.time_left > 0:
+			remove_child(attackLingerInstance)
+			timerAttackLinger.stop()
 
 func _on_timer_knockback_timeout():
 	isGettingKnockedBack = false
@@ -127,17 +128,17 @@ func _on_timer_knockback_timeout():
 	knockbackVector = Vector2.ZERO
 
 func _on_timer_attack_hitscan_timeout():
-	timerAttackPostAnimation.start()
-	attackPostAnimationInstance.position = attackHitscanInstance.position
-	attackPostAnimationInstance.rotation = attackHitscanInstance.rotation
-	attackPostAnimationInstance.show()
-	add_child(attackPostAnimationInstance)
+	timerAttackLinger.start()
+	attackLingerInstance.position = attackHitscanInstance.position
+	attackLingerInstance.rotation = attackHitscanInstance.rotation
+	attackLingerInstance.show()
+	add_child(attackLingerInstance)
 	
 	remove_child(attackHitscanInstance)
 	
-func _on_timer_attack_post_animation_timeout():
+func _on_timer_attack_linger_timeout():
 	timerAttackCD.start()
-	remove_child(attackPostAnimationInstance)
+	remove_child(attackLingerInstance)
 	isAttacking = false
 	canMove = true
 
@@ -177,3 +178,4 @@ func _on_timer_parry_stun_timeout():
 	isGettingKnockedBack = false
 	timerAttackCD.start()
 	knockbackVector = Vector2.ZERO
+

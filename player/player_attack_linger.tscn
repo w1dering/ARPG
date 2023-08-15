@@ -1,12 +1,12 @@
 [gd_scene load_steps=3 format=3 uid="uid://d1wyohel2qn7k"]
 
-[ext_resource type="Texture2D" uid="uid://colr7fmi3p3bn" path="res://player/sprites/player_slash.png" id="1_h7kph"]
+[ext_resource type="Texture2D" uid="uid://colr7fmi3p3bn" path="res://player/sprites/player_slash.png" id="1_8rs8t"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_8i1xh"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": ExtResource("1_h7kph")
+"texture": ExtResource("1_8rs8t")
 }],
 "loop": true,
 "name": &"default",

@@ -17,7 +17,7 @@ func extra_ready():
 	knockbackResistance = 10
 	
 	attackHitscanInstance = load("res://enemy/shadow_hitscan_attack.tscn").instantiate()
-	attackPostAnimationInstance = load("res://enemy/shadow_attack_post_animation.tscn").instantiate()
+	attackLingerInstance = load("res://enemy/shadow_attack_linger.tscn").instantiate()
 	
 	var arr = attackHitscanInstance.get_node("Hitbox").get_polygon()
 	var maxes = Vector2(-1, -1)
@@ -36,7 +36,7 @@ func extra_ready():
 	attackHitscanInstance.damage = damageOnAttack
 	
 	attackHitscanInstance.z_index = 100
-	attackPostAnimationInstance.z_index = 100
+	attackLingerInstance.z_index = 100
 	
 	attackHitscanInstance.connect("wasParried", was_parried)
 	
@@ -49,7 +49,7 @@ func _process(delta):
 	if player.isInSlowMo:
 		var time_scale = player.get_time_scale()
 		timerAttackHitscan.wait_time = timerAttackHitscanBaseTime / time_scale
-		timerAttackPostAnimation.wait_time = timerAttackPostAnimationBaseTime / time_scale
+		timerAttackLinger.wait_time = timerAttackLingerBaseTime / time_scale
 		timerAttackCD.wait_time = timerAttackCDBaseTime / time_scale
 		# invulnerability timer stays the same, even tho technically they're always invulnerable
 		timerParryStun.wait_time = timerParryStunBaseTime / time_scale
