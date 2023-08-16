@@ -13,35 +13,25 @@ var directionFacing: Vector2 = Vector2.RIGHT
 @export var maxHP: int = 100
 var HP: int = 100
 
-@export var timerCameraOffset = 0.05
-
-# skills
-@export var damageOnAttack: int = 20
-@export var knockbackAmountOnAttack: int = 10
-@export var hitStopTimeOnAttack: float = 0.1
-@export var screenShakeAmountOnAttack: int = 3 # duration of screen shake is equal to duration of hit stop
-
-var isAttacking: bool = false
-var canAttack: bool = true
-
-@export var damageOnCleave: int = 40
-@export var knockbackAmountOnCleave: int = 20
-
-var isUsingCleave: bool = false
-var canCleave: bool = true
-
 @export var spriteFrameRate: int = 60
-@onready var timerDash = $TimerHolder/TimerDash
-@onready var timerDashPerfect = $TimerHolder/TimerDashPerfect
-@onready var timerDashCD = $TimerHolder/TimerDashCD
-@onready var timerGuardPerfect = $TimerHolder/TimerGuardPerfect
-@onready var timerGuardCD = $TimerHolder/TimerGuardCD
+@onready var timerDash = $TimersBasic/TimerDash
+@onready var timerDashPerfect = $TimersBasic/TimerDashPerfect
+@onready var timerDashCD = $TimersBasic/TimerDashCD
+@onready var timerGuardPerfect = $TimersBasic/TimerGuardPerfect
+@onready var timerGuardCD = $TimersBasic/TimerGuardCD
 @export var timerGuardCDBaseTime = 0.5
-@onready var timerAttackHitscan = $TimerHolder/TimerAttackHitscan
-@onready var timerAttackLinger = $TimerHolder/TimerAttackLinger
-@onready var timerAttackCD = $TimerHolder/TimerAttackCD
-@onready var timerInvulnerability = $TimerHolder/TimerInvulnerability
-@onready var timerSlowMo = $TimerHolder/TimerSlowMo
+@onready var timerInvulnerability = $TimersBasic/TimerInvulnerability
+@onready var timerSlowMo = $TimersBasic/TimerSlowMo
+
+@onready var timerAttackHitscan = $TimersAttack/TimerAttackHitscan
+@onready var timerAttackLinger = $TimersAttack/TimerAttackLinger
+@onready var timerAttackCD = $TimersAttack/TimerAttackCD
+
+@onready var timerSkill0BuildUp = $TimersSkill0/TimerSkill0BuildUp
+@onready var timerSkill0Hitscan = $TimersSkill0/TimerSkill0Hitscan
+@onready var timerSkill0Linger = $TimersSkill0/TimerSkill0Linger
+@onready var timerSkill0CD = $TimersSkill0/TimerSkill0CD
+@export var timerCameraOffset = 0.05
 
 var attackHitscanInstance: Node2D
 var attackLingerInstance: Node2D
@@ -51,23 +41,42 @@ var size: Vector2
 var boundsTopLeft: Vector2
 var boundsSize: Vector2
 
-var keepCentered: bool = false
+# skills
+@export var damageOnAttack: int = 20
+@export var knockbackAmountOnAttack: int = 10
+@export var hitStopTimeOnAttack: float = 0.1
+@export var screenShakeAmountOnAttack: int = 3 # duration of screen shake is equal to duration of hit stop
+var isAttacking: bool = false
+var canAttack: bool = true
+var keyAttack = MOUSE_BUTTON_LEFT
+
+@export var damageOnSkill0: int = 40
+@export var knockbackAmountOnSkill0: int = 20
+var isUsingSkill0: bool = false
+var canSkill0: bool = true
+var keySkill0 = KEY_1
 
 var isInvulnerable: bool = false
+
 var canMove: bool = true
+var keyW = KEY_W
+var keyA = KEY_A
+var keyS = KEY_S
+var keyD = KEY_D
 
 var isDashing: bool = false
 var canDash: bool = true
 var canDashPerfect: bool = false
 var currentDashDir: Vector2 = Vector2.ZERO
-
-var isInSlowMo: bool = false
-@export var slowMoMultiplier: float = 0.25
+var keyDash = KEY_SHIFT
 
 var isGuarding: bool = false
 var canGuard: bool = true
 var canGuardPerfect: bool = false
+var keyGuard = KEY_SPACE
 
+var isInSlowMo: bool = false
+@export var slowMoMultiplier: float = 0.25
 
 # Called when the node enters the scene tree for the first time.
 func _ready():

@@ -30,59 +30,74 @@ sprite_frames = SubResource("SpriteFrames_ag20e")
 position = Vector2(1.90735e-06, -1.90735e-06)
 shape = SubResource("RectangleShape2D_8w7qm")
 
-[node name="TimerHolder" type="Node2D" parent="."]
+[node name="TimersBasic" type="Node2D" parent="."]
 
-[node name="TimerDash" type="Timer" parent="TimerHolder"]
+[node name="TimerDash" type="Timer" parent="TimersBasic"]
 wait_time = 0.25
 one_shot = true
 
-[node name="TimerDashPerfect" type="Timer" parent="TimerHolder"]
+[node name="TimerDashPerfect" type="Timer" parent="TimersBasic"]
 wait_time = 0.1
 one_shot = true
 
-[node name="TimerDashCD" type="Timer" parent="TimerHolder"]
+[node name="TimerDashCD" type="Timer" parent="TimersBasic"]
 wait_time = 0.2
 one_shot = true
 
-[node name="TimerGuardPerfect" type="Timer" parent="TimerHolder"]
+[node name="TimerGuardPerfect" type="Timer" parent="TimersBasic"]
 wait_time = 0.1
 one_shot = true
 
-[node name="TimerGuardCD" type="Timer" parent="TimerHolder"]
+[node name="TimerGuardCD" type="Timer" parent="TimersBasic"]
 wait_time = 0.5
 one_shot = true
 
-[node name="TimerAttackHitscan" type="Timer" parent="TimerHolder"]
+[node name="TimerInvulnerability" type="Timer" parent="TimersBasic"]
+wait_time = 2.0
+one_shot = true
+
+[node name="TimerSlowMo" type="Timer" parent="TimersBasic"]
+wait_time = 2.0
+
+[node name="TimersAttack" type="Node2D" parent="."]
+
+[node name="TimerAttackHitscan" type="Timer" parent="TimersAttack"]
 wait_time = 0.05
 one_shot = true
 
-[node name="TimerAttackLinger" type="Timer" parent="TimerHolder"]
+[node name="TimerAttackLinger" type="Timer" parent="TimersAttack"]
 wait_time = 0.15
 one_shot = true
 
-[node name="TimerAttackCD" type="Timer" parent="TimerHolder"]
+[node name="TimerAttackCD" type="Timer" parent="TimersAttack"]
 wait_time = 0.133
 one_shot = true
 
-[node name="TimerInvulnerability" type="Timer" parent="TimerHolder"]
-wait_time = 2.0
+[node name="TimersSkill0" type="Node2D" parent="."]
+
+[node name="TimerSkill0BuildUp" type="Timer" parent="TimersSkill0"]
+wait_time = 0.2
 one_shot = true
 
-[node name="TimerSlowMo" type="Timer" parent="TimerHolder"]
-wait_time = 2.0
+[node name="TimerSkill0Hitscan" type="Timer" parent="TimersSkill0"]
+wait_time = 0.05
+one_shot = true
 
-[node name="TimerSkill0BuildUp" type="Timer" parent="TimerHolder"]
+[node name="TimerSkill0Linger" type="Timer" parent="TimersSkill0"]
+wait_time = 0.45
+one_shot = true
 
-[node name="TimerSkill0" type="Timer" parent="TimerHolder"]
+[node name="TimerSkill0CD" type="Timer" parent="TimersSkill0"]
+one_shot = true
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
-[connection signal="timeout" from="TimerHolder/TimerDash" to="." method="_on_timer_dash_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerDashPerfect" to="." method="_on_timer_dash_perfect_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerDashCD" to="." method="_on_timer_dash_cd_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerGuardPerfect" to="." method="_on_timer_guard_perfect_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerGuardCD" to="." method="_on_timer_guard_cd_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerAttackLinger" to="." method="_on_timer_attack_linger_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerInvulnerability" to="." method="_on_timer_invulnerability_timeout"]
-[connection signal="timeout" from="TimerHolder/TimerSlowMo" to="." method="_on_timer_slow_mo_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerDash" to="." method="_on_timer_dash_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerDashPerfect" to="." method="_on_timer_dash_perfect_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerDashCD" to="." method="_on_timer_dash_cd_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerGuardPerfect" to="." method="_on_timer_guard_perfect_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerGuardCD" to="." method="_on_timer_guard_cd_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerInvulnerability" to="." method="_on_timer_invulnerability_timeout"]
+[connection signal="timeout" from="TimersBasic/TimerSlowMo" to="." method="_on_timer_slow_mo_timeout"]
+[connection signal="timeout" from="TimersAttack/TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
+[connection signal="timeout" from="TimersAttack/TimerAttackLinger" to="." method="_on_timer_attack_linger_timeout"]
+[connection signal="timeout" from="TimersAttack/TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
