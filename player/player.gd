@@ -6,8 +6,9 @@ signal shakeScreen
 signal cameraPosition
 
 @export var maxSpeed: int = 500
-@export var acceleration: int = 4000
+@export var acceleration: int = 2000
 var currentSpeed: int = 0
+var maxSpeedMulti: float = 1
 var directionFacing: Vector2 = Vector2.RIGHT
 @export var dashSpeed: int = 5000
 @export var maxHP: int = 100
@@ -27,6 +28,7 @@ var HP: int = 100
 @onready var timerAttackLinger = $TimersAttack/TimerAttackLinger
 @onready var timerAttackCD = $TimersAttack/TimerAttackCD
 
+@onready var timerSkill0Charge = $TimersSkill0/TimerSkill0Charge
 @onready var timerSkill0BuildUp = $TimersSkill0/TimerSkill0BuildUp
 @onready var timerSkill0Hitscan = $TimersSkill0/TimerSkill0Hitscan
 @onready var timerSkill0Linger = $TimersSkill0/TimerSkill0Linger
@@ -42,38 +44,45 @@ var boundsTopLeft: Vector2
 var boundsSize: Vector2
 
 # skills
-@export var damageOnAttack: int = 20
-@export var knockbackAmountOnAttack: int = 10
-@export var hitStopTimeOnAttack: float = 0.1
-@export var screenShakeAmountOnAttack: int = 3 # duration of screen shake is equal to duration of hit stop
+@export var attackDamage: int = 20
+@export var attackKnockback: int = 10
+@export var attackHitStop: float = 0.1
+@export var attackScreenShakeAmount: int = 3 # duration of screen shake is equal to duration of hit stop
 var isAttacking: bool = false
 var canAttack: bool = true
-var keyAttack = MOUSE_BUTTON_LEFT
+var keyAttack = "LMB"
 
-@export var damageOnSkill0: int = 40
-@export var knockbackAmountOnSkill0: int = 20
+@export var skill0Damage: int = 40
+@export var skill0Knockback: int = 20
+@export var skill0HitStop: float = 0.25
+@export var skill0ScreenShakeAmount: int = 8
+var canChargeSkill0: bool = true
+var isChargingSkill0: bool = false
+var canUseSkill0: bool = false
 var isUsingSkill0: bool = false
-var canSkill0: bool = true
-var keySkill0 = KEY_1
+var keySkill0 = "key_1"
+
+var skill0HitscanInstance: Node2D
+var skill0LingerInstance: Node2D
 
 var isInvulnerable: bool = false
 
 var canMove: bool = true
-var keyW = KEY_W
-var keyA = KEY_A
-var keyS = KEY_S
-var keyD = KEY_D
+var keyW = "key_w"
+var keyA = "key_a"
+var keyS = "key_s"
+var keyD = "key_d"
 
 var isDashing: bool = false
 var canDash: bool = true
 var canDashPerfect: bool = false
 var currentDashDir: Vector2 = Vector2.ZERO
-var keyDash = KEY_SHIFT
+var keyDash = "RMB"
 
 var isGuarding: bool = false
 var canGuard: bool = true
 var canGuardPerfect: bool = false
-var keyGuard = KEY_SPACE
+var keyGuard = "key_space"
 
 var isInSlowMo: bool = false
 @export var slowMoMultiplier: float = 0.25
@@ -85,13 +94,24 @@ func _ready():
 	
 	attackHitscanInstance = load("res://player/player_attack_hitscan.tscn").instantiate()
 	attackHitscanInstance.z_index = 100
-	attackHitscanInstance.damage = damageOnAttack
-	attackHitscanInstance.knockbackAmount = knockbackAmountOnAttack
-	attackHitscanInstance.hitStopTime = hitStopTimeOnAttack
-	attackHitscanInstance.screenShakeAmount = screenShakeAmountOnAttack
+	attackHitscanInstance.damage = attackDamage
+	attackHitscanInstance.knockbackAmount = attackKnockback
+	attackHitscanInstance.hitStopTime = attackHitStop
+	attackHitscanInstance.screenShakeAmount = attackScreenShakeAmount
 	
 	attackLingerInstance = load("res://player/player_attack_linger.tscn").instantiate()
 	attackLingerInstance.z_index = 100
+	
+	skill0HitscanInstance = load("res://player/player_skill_0_hitscan.tscn").instantiate()
+	skill0HitscanInstance.z_index = 100
+	skill0HitscanInstance.damage = skill0Damage
+	skill0HitscanInstance.knockbackAmount = skill0Knockback
+	skill0HitscanInstance.hitStopTime = skill0HitStop
+	skill0HitscanInstance.screenShakeAmount = skill0ScreenShakeAmount
+	
+	skill0LingerInstance = load("res://player/player_skill_0_linger.tscn").instantiate()
+	skill0LingerInstance.z_index = 100
+	
 	size = $Hitbox.get_shape().get_rect().size
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -99,20 +119,20 @@ func _process(delta):
 	var inputDir = Vector2.ZERO
 	
 	# WASD movement
-	if Input.is_action_pressed("key_w"):
+	if Input.is_action_pressed(keyW):
 		inputDir += Vector2.UP
-	if Input.is_action_pressed("key_a"):
+	if Input.is_action_pressed(keyA):
 		inputDir += Vector2.LEFT
-	if Input.is_action_pressed("key_s"):
+	if Input.is_action_pressed(keyS):
 		inputDir += Vector2.DOWN
-	if Input.is_action_pressed("key_d"):
+	if Input.is_action_pressed(keyD):
 		inputDir += Vector2.RIGHT
 	
 	if inputDir.length() > 1:
 		inputDir = inputDir.normalized()
 	
-	if inputDir.length() > 0:
-		if !isDashing and abs(directionFacing.angle_to(inputDir)) > PI / 2 + 0.1:
+	if inputDir.length() > 0 and !isDashing:
+		if abs(directionFacing.angle_to(inputDir)) > PI / 2 + 0.1:
 			currentSpeed = 0
 		directionFacing = inputDir
 	
@@ -120,7 +140,7 @@ func _process(delta):
 		currentSpeed = 0
 	# stops WASD movement if dashing, blocking
 	# attacking - can hold for continuous attacks
-	if Input.is_action_pressed("LMB"):
+	if Input.is_action_pressed(keyAttack):
 		if canAttack and !isDashing:
 			start_attack()
 			# play swing animation when done
@@ -129,13 +149,19 @@ func _process(delta):
 			if isGuarding:
 				timerGuardCD.wait_time = timerAttackHitscan.wait_time + timerAttackLinger.wait_time
 				cancel_guard()
+				maxSpeedMulti = 0.5
+		if isChargingSkill0:
+			cancel_skill_0()
 	# second statement allows basically buffering a guard
-	if (Input.is_action_pressed("key_space") and canGuard) or (Input.is_action_pressed("key_space") and canGuard and !isGuarding and !isAttacking):
+	if (Input.is_action_pressed(keyGuard) and canGuard) or (Input.is_action_pressed(keyGuard) and canGuard and !isGuarding and !isAttacking):
 		start_guard()
-		cancel_attack()
-	if isGuarding and !Input.is_action_pressed("key_space"):
+		if isAttacking:
+			cancel_attack()
+		if isChargingSkill0 or isUsingSkill0:
+			cancel_skill_0()
+	if isGuarding and !Input.is_action_pressed(keyGuard):
 		cancel_guard()
-	if Input.is_action_just_pressed("RMB") and canDash:
+	if Input.is_action_just_pressed(keyDash) and canDash:
 		start_dash(inputDir)
 		
 		# dash-cancelling an attack
@@ -145,6 +171,8 @@ func _process(delta):
 		if isGuarding:
 			timerGuardCD.wait_time = timerDash.wait_time
 			cancel_guard()
+		if isChargingSkill0 or isUsingSkill0:
+			cancel_skill_0()
 	if timerDash.get_time_left() > 0 and isDashing:
 		if inputDir != Vector2.ZERO and abs(currentDashDir.angle_to(inputDir)) <= PI / 2 + 0.2:
 			# +0.2 is there for insurance bc angles that are exactly PI/2 might get rounded down 
@@ -156,13 +184,21 @@ func _process(delta):
 		move(currentDashDir, dashSpeed * timerDash.time_left / timerDash.wait_time, delta)
 		currentSpeed = maxSpeed
 	
-	if canMove and !isGuarding and !isDashing:
-		if currentSpeed < maxSpeed and inputDir.length() != 0:
+	if canMove and !isDashing:
+		if currentSpeed < maxSpeed * maxSpeedMulti and inputDir.length() != 0:
 			currentSpeed += acceleration * delta
-			if currentSpeed > maxSpeed:
-				currentSpeed = maxSpeed
+		if currentSpeed > maxSpeed * maxSpeedMulti:
+			currentSpeed = maxSpeed * maxSpeedMulti
 			
 		move(inputDir, currentSpeed, delta)
+	
+	if Input.is_action_just_pressed(keySkill0) and canMove and !isDashing:
+		if canChargeSkill0:
+			charge_skill_0()
+		elif isChargingSkill0:
+			cancel_skill_0()
+		elif canUseSkill0:
+			start_skill_0()
 	
 	position.x = clamp(position.x, boundsTopLeft.x + size.x / 2, boundsTopLeft.x + boundsSize.x - size.x / 2)
 	position.y = clamp(position.y, boundsTopLeft.y + size.y / 2, boundsTopLeft.y + boundsSize.y - size.y / 2)
@@ -218,21 +254,89 @@ func cancel_dash():
 
 func start_guard():
 	if canGuard:
+		maxSpeedMulti = 0.5
 		canGuard = false
 		isGuarding = true
 		canGuardPerfect = true
 		timerGuardPerfect.start()
-		canMove = false
-		currentSpeed = 0
 
 func cancel_guard():
 	if isGuarding:
+		maxSpeedMulti = 1
 		canGuard = false
 		isGuarding = false
 		canGuardPerfect = false
 		timerGuardPerfect.stop()
 		timerGuardCD.start()
+
+func charge_skill_0():
+	if canChargeSkill0:
+		timerSkill0Charge.start()
+		isChargingSkill0 = true
+		canChargeSkill0 = false
+		maxSpeedMulti = 0.5
+
+func _on_timer_skill_0_charge_timeout():
+	maxSpeedMulti = 1
+	canUseSkill0 = true
+	canChargeSkill0 = false
+	isChargingSkill0 = false
+
+func start_skill_0():
+	canMove = false
+	canUseSkill0 = true
+	isUsingSkill0 = true
+	canChargeSkill0 = false
+	isChargingSkill0 = false
+	timerSkill0BuildUp.start()
+
+func _on_timer_skill_0_build_up_timeout():
+	if canUseSkill0:
 		canMove = true
+		timerSkill0Hitscan.start()
+		var mousePosition = get_global_mouse_position()
+		var attackVector = mousePosition - position
+		skill0HitscanInstance.position = attackVector.normalized() * 150
+		skill0HitscanInstance.rotation = attackVector.angle() + PI / 2
+		skill0HitscanInstance.show()
+		add_child(skill0HitscanInstance)
+
+func _on_timer_skill_0_hitscan_timeout():
+	timerSkill0Linger.start()
+	skill0LingerInstance.position = skill0HitscanInstance.position
+	skill0LingerInstance.rotation = skill0HitscanInstance.rotation
+	skill0LingerInstance.show()
+	add_child(skill0LingerInstance)
+	
+	remove_child(skill0HitscanInstance)
+
+func _on_timer_skill_0_linger_timeout():
+	remove_child(skill0LingerInstance)
+	cancel_skill_0()
+
+func _on_timer_skill_0_cd_timeout():
+	canChargeSkill0 = true
+
+func cancel_skill_0():
+	maxSpeedMulti = 1
+	
+	canChargeSkill0 = false
+	canUseSkill0 = false
+	isChargingSkill0 = false
+	isUsingSkill0 = false
+	
+	if timerSkill0Hitscan.time_left > 0:
+		remove_child(skill0HitscanInstance)
+	if timerSkill0Linger.time_left > 0:
+		remove_child(skill0LingerInstance)
+	
+	timerSkill0Charge.stop()
+	timerSkill0BuildUp.stop()
+	timerSkill0Hitscan.stop()
+	timerSkill0Linger.stop()
+	timerSkill0CD.stop()
+	
+	timerSkill0CD.start()
 
 func _on_timer_dash_timeout():
 	timerDashCD.start()
@@ -254,16 +358,16 @@ func _on_timer_attack_hitscan_timeout():
 	remove_child(attackHitscanInstance)
 	
 func _on_timer_attack_linger_timeout():
-	timerAttackCD.start()
+	cancel_attack()
 	remove_child(attackLingerInstance)
-	isAttacking = false
 
 func _on_timer_attack_cd_timeout():
 	canAttack = true
 
 func _on_area_entered(area):
+	var isOwnAttack = area == attackHitscanInstance or area == skill0HitscanInstance
 	# prevents player from taking damage from their own attack or when invulnerable
-	if area != attackHitscanInstance and !isInvulnerable:
+	if !isOwnAttack and !isInvulnerable:
 		# third condition checks if instance is a mob (which would have area entered) or an attack instance (which would
 		# not have area entered method, as that is handled in the mob script)
 		if canDashPerfect and !isInSlowMo:
@@ -334,6 +438,3 @@ func get_time_scale() -> float:
 func _on_timer_slow_mo_timeout():
 	isInSlowMo = false
 	isInvulnerable = false
-
-
-

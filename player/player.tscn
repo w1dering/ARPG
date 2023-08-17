@@ -75,6 +75,10 @@ one_shot = true
 
 [node name="TimersSkill0" type="Node2D" parent="."]
 
+[node name="TimerSkill0Charge" type="Timer" parent="TimersSkill0"]
+wait_time = 2.0
+one_shot = true
+
 [node name="TimerSkill0BuildUp" type="Timer" parent="TimersSkill0"]
 wait_time = 0.2
 one_shot = true
@@ -84,7 +88,7 @@ wait_time = 0.05
 one_shot = true
 
 [node name="TimerSkill0Linger" type="Timer" parent="TimersSkill0"]
-wait_time = 0.45
+wait_time = 0.25
 one_shot = true
 
 [node name="TimerSkill0CD" type="Timer" parent="TimersSkill0"]
@@ -101,3 +105,8 @@ one_shot = true
 [connection signal="timeout" from="TimersAttack/TimerAttackHitscan" to="." method="_on_timer_attack_hitscan_timeout"]
 [connection signal="timeout" from="TimersAttack/TimerAttackLinger" to="." method="_on_timer_attack_linger_timeout"]
 [connection signal="timeout" from="TimersAttack/TimerAttackCD" to="." method="_on_timer_attack_cd_timeout"]
+[connection signal="timeout" from="TimersSkill0/TimerSkill0Charge" to="." method="_on_timer_skill_0_charge_timeout"]
+[connection signal="timeout" from="TimersSkill0/TimerSkill0BuildUp" to="." method="_on_timer_skill_0_build_up_timeout"]
+[connection signal="timeout" from="TimersSkill0/TimerSkill0Hitscan" to="." method="_on_timer_skill_0_hitscan_timeout"]
+[connection signal="timeout" from="TimersSkill0/TimerSkill0Linger" to="." method="_on_timer_skill_0_linger_timeout"]
+[connection signal="timeout" from="TimersSkill0/TimerSkill0CD" to="." method="_on_timer_skill_0_cd_timeout"]

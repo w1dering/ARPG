@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://gpi3sdbkuqr"]
+
+[ext_resource type="Script" path="res://player/player_skill_0_hitscan.gd" id="1_bbpve"]
+[ext_resource type="Texture2D" uid="uid://dmdwkynmmef7c" path="res://player/sprites/skill 0 sprite.png" id="2_h7djd"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_cy5df"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_h7djd")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kl6da"]
+size = Vector2(215, 216)
+
+[node name="PlayerSkill0Hitscan" type="Area2D"]
+script = ExtResource("1_bbpve")
+
+[node name="Sprite" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 1)
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_cy5df")
+
+[node name="Hitbox" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_kl6da")
