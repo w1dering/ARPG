@@ -7,13 +7,15 @@ var levelTopLeft: Vector2
 var levelSize: Vector2
 
 @onready var player = $Player
+@onready var HUD = $HUD
 
 func _ready():
 	levelTopLeft = $TextureRect.position
 	levelSize = $TextureRect.size
-	$HUD.player = player
+	HUD.player = player
 	
 	player.connect("playerHPChanged", player_HP_change)
+	player.connect("playerMPChanged", player_MP_change)
 	player.connect("hitStop", hit_stop)
 	player.connect("shakeScreen", shake_screen)
 	player.connect("cameraPosition", update_camera_position)
@@ -21,8 +23,8 @@ func _ready():
 	player.boundsTopLeft = levelTopLeft
 	player.boundsSize = levelSize
 	
-	
-	$HUD.change_player_health_bar(100)
+	HUD.change_player_HP_bar(100)
+	HUD.change_player_MP_bar(100)
 	
 	$CameraTarget.position = player.position
 
@@ -47,7 +49,10 @@ func _on_timer_mob_spawn_timeout():
 	$ShadowSpawner.add_child(shadow)
 
 func player_HP_change(amount):
-	$HUD.change_player_health_bar(amount)
+	HUD.change_player_HP_bar(amount)
+
+func player_MP_change(amount):
+	HUD.change_player_MP_bar(amount)
 
 func hit_stop(time):
 	$HitStop.wait_time = time

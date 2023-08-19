@@ -1,6 +1,7 @@
 extends Area2D
 
 signal playerHPChanged
+signal playerMPChanged
 signal hitStop
 signal shakeScreen
 signal cameraPosition
@@ -11,8 +12,13 @@ var currentSpeed: int = 0
 var maxSpeedMulti: float = 1
 var directionFacing: Vector2 = Vector2.RIGHT
 @export var dashSpeed: int = 5000
-@export var maxHP: int = 100
-var HP: int = 100
+
+@export var maxHP: float = 100
+var HP: float = 100
+
+@export var maxMP: float = 100
+var MP: float = 100
+@export var MPGainOnAttack: float = 10
 
 @export var spriteFrameRate: int = 60
 @onready var timerDash = $TimersBasic/TimerDash
@@ -61,6 +67,7 @@ var isChargingSkill0: bool = false
 var canUseSkill0: bool = false
 var isUsingSkill0: bool = false
 var keySkill0 = "key_1"
+var MPLossOnSkill0: float = 20
 
 var skill0HitscanInstance: Node2D
 var skill0LingerInstance: Node2D
@@ -83,6 +90,7 @@ var isGuarding: bool = false
 var canGuard: bool = true
 var canGuardPerfect: bool = false
 var keyGuard = "key_space"
+@export var MPGainOnParry: float = 60
 
 var isInSlowMo: bool = false
 @export var slowMoMultiplier: float = 0.25
@@ -206,6 +214,12 @@ func _process(delta):
 	send_camera_position(position)
 	if isInSlowMo:
 		isInvulnerable = true
+	
+	if timerSkill0Charge.time_left > 0:
+		change_MP_by(-MPLossOnSkill0 * delta)
+	
+	if MP == 0:
+		cancel_skill_0()
 
 func start_attack():
 	if canAttack:
@@ -270,7 +284,7 @@ func cancel_guard():
 		timerGuardCD.start()
 
 func charge_skill_0():
-	if canChargeSkill0:
+	if canChargeSkill0 and MP > 0:
 		timerSkill0Charge.start()
 		isChargingSkill0 = true
 		canChargeSkill0 = false
@@ -292,7 +306,6 @@ func start_skill_0():
 
 func _on_timer_skill_0_build_up_timeout():
 	if canUseSkill0:
-		canMove = true
 		timerSkill0Hitscan.start()
 		var mousePosition = get_global_mouse_position()
 		var attackVector = mousePosition - position
@@ -312,6 +325,7 @@ func _on_timer_skill_0_hitscan_timeout():
 
 func _on_timer_skill_0_linger_timeout():
 	remove_child(skill0LingerInstance)
+	canMove = true
 	cancel_skill_0()
 
 func _on_timer_skill_0_cd_timeout():
@@ -324,6 +338,8 @@ func cancel_skill_0():
 	canUseSkill0 = false
 	isChargingSkill0 = false
 	isUsingSkill0 = false
+	
+	canMove = true
 	
 	if timerSkill0Hitscan.time_left > 0:
 		remove_child(skill0HitscanInstance)
@@ -343,10 +359,8 @@ func _on_timer_dash_timeout():
 	isDashing = false
 	canAttack = true
 
-
 func _on_timer_dash_cd_timeout():
 	canDash = true
-
 
 func _on_timer_attack_hitscan_timeout():
 	timerAttackLinger.start()
@@ -379,6 +393,7 @@ func _on_area_entered(area):
 		elif canGuardPerfect:
 			print("parried")
 			area.was_parried()
+			change_MP_by(MPGainOnParry)
 		elif isGuarding:
 			print("guarded")
 			hitStop.emit(0.1)
@@ -390,11 +405,38 @@ func _on_area_entered(area):
 			print("hit")
 			hitStop.emit(0.3)
 			shakeScreen.emit(0.3, 10)
-			HP -= area.damage
+			change_HP_by(-area.damage)
 			playerHPChanged.emit(HP)
 			# if HP <= 0 game_over()
 			make_invulnerable(2.0)
 			# play hit and invulnerable animation
+
+func change_HP_to(amount):
+	HP = amount
+	playerHPChanged.emit(HP)
+
+func change_HP_by(amount):
+	HP += amount
+	if HP > maxHP:
+		HP = maxHP
+	elif HP <= 0:
+		pass
+		# game over
+	
+	playerHPChanged.emit(HP)
+
+func change_MP_to(amount):
+	MP = amount
+	playerMPChanged.emit(MP)
+
+func change_MP_by(amount):
+	MP += amount
+	if MP > maxMP:
+		MP = maxMP
+	elif MP <= 0:
+		MP = 0
+	
+	playerMPChanged.emit(MP)
 
 func move(direction, speed, delta):
 	position += direction.normalized() * speed * delta
@@ -431,7 +473,7 @@ func get_time_scale() -> float:
 	if timerSlowMo.wait_time - t <= 0.1:
 		return 1.0 - (timerSlowMo.wait_time - t) * 7.5
 	if t <= 1:
-		return 0.25 + 0.75 * (1 - t)
+		return slowMoMultiplier + 0.75 * (1 - t)
 	else:
 		return slowMoMultiplier
 

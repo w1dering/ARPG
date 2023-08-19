@@ -99,6 +99,8 @@ func _on_area_entered(area):
 		hitStop.emit(area.hitStopTime)
 		shakeScreen.emit(area.hitStopTime, area.screenShakeAmount)
 		reduce_hp(area.damage)
+		if area == player.attackHitscanInstance:
+			player.change_MP_by(player.MPGainOnAttack)
 		knockback(position - player.position, area.knockbackAmount)
 		isAttacking = false
 		canAttack = false
